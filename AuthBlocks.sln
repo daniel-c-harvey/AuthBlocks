@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthBlocks", "AuthBlocks\AuthBlocks.csproj", "{2AD60DAE-2C11-4463-955C-DF55BC1FB048}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthBlocksWeb", "AuthBlocksWeb\AuthBlocksWeb.csproj", "{6EA05B76-F47F-4651-BCF3-48F1AB21F08F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthBlocksWeb.Client", "AuthBlocksWeb.Client\AuthBlocksWeb.Client.csproj", "{D8CA46DC-B0AF-42F1-832E-20038F0D3628}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2AD60DAE-2C11-4463-955C-DF55BC1FB048}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AD60DAE-2C11-4463-955C-DF55BC1FB048}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AD60DAE-2C11-4463-955C-DF55BC1FB048}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AD60DAE-2C11-4463-955C-DF55BC1FB048}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EA05B76-F47F-4651-BCF3-48F1AB21F08F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EA05B76-F47F-4651-BCF3-48F1AB21F08F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EA05B76-F47F-4651-BCF3-48F1AB21F08F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EA05B76-F47F-4651-BCF3-48F1AB21F08F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8CA46DC-B0AF-42F1-832E-20038F0D3628}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8CA46DC-B0AF-42F1-832E-20038F0D3628}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8CA46DC-B0AF-42F1-832E-20038F0D3628}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8CA46DC-B0AF-42F1-832E-20038F0D3628}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
