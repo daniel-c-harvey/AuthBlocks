@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\NetBlocks\NetBlocks.csproj" />
     <ProjectReference Include="..\AuthBlocksModels\AuthBlocksModels.csproj" />
     <ProjectReference Include="..\AuthBlocksData\AuthBlocksData.csproj" />
   </ItemGroup>

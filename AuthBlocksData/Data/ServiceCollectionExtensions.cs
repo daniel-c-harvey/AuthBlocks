@@ -9,38 +9,38 @@ namespace AuthBlocksData.Data;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddAuthBlocksData(this IServiceCollection services, string connectionString)
-    {
-        // Add Entity Framework
-        services.AddDbContext<AuthDbContext>(options =>
-            options.UseNpgsql(connectionString));
-
-        // Add Identity with Entity Framework stores
-        services.AddIdentityCore<ApplicationUser>(options =>
-        {
-            options.SignIn.RequireConfirmedAccount = true;
-            options.Password.RequireNonAlphanumeric = false;
-            options.Password.RequireUppercase = false;
-            options.Password.RequireLowercase = false;
-            options.Password.RequireDigit = false;
-        })
-        .AddRoles<ApplicationRole>()
-        .AddEntityFrameworkStores<AuthDbContext>()
-        .AddDefaultTokenProviders();
-
-        // Add SignInManager manually
-        services.AddScoped<SignInManager<ApplicationUser>>();
-
-        // Add repositories for custom business logic
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IRoleRepository, RoleRepository>();
-
-        // Add services that combine Identity managers with repositories
-        services.AddScoped<UserService>();
-        services.AddScoped<RoleService>();
-
-        return services;
-    }
+    // public static IServiceCollection AddAuthBlocksData(this IServiceCollection services, string connectionString)
+    // {
+    //     // Add Entity Framework
+    //     services.AddDbContext<AuthDbContext>(options =>
+    //         options.UseNpgsql(connectionString));
+    //
+    //     // Add Identity with Entity Framework stores
+    //     services.AddIdentityCore<ApplicationUser>(options =>
+    //     {
+    //         options.SignIn.RequireConfirmedAccount = true;
+    //         options.Password.RequireNonAlphanumeric = false;
+    //         options.Password.RequireUppercase = false;
+    //         options.Password.RequireLowercase = false;
+    //         options.Password.RequireDigit = false;
+    //     })
+    //     .AddRoles<ApplicationRole>()
+    //     .AddEntityFrameworkStores<AuthDbContext>()
+    //     .AddDefaultTokenProviders();
+    //
+    //     // Add SignInManager manually
+    //     services.AddScoped<SignInManager<ApplicationUser>>();
+    //
+    //     // Add repositories for custom business logic
+    //     services.AddScoped<IUserRepository, UserRepository>();
+    //     services.AddScoped<IRoleRepository, RoleRepository>();
+    //
+    //     // Add services that combine Identity managers with repositories
+    //     services.AddScoped<UserService>();
+    //     services.AddScoped<RoleService>();
+    //
+    //     return services;
+    // }
 
     /// <summary>
     /// Adds AuthBlocks data layer services configured for Web API scenarios (without SignInManager)
