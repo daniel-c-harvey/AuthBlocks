@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using AuthBlocks.DataModels.Identity;
+using AuthBlocksModels.Entities.Identity;
 
 namespace AuthBlocksWeb.Components.Account;
 

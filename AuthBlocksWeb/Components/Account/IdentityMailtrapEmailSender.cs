@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using AuthBlocksModels.Entities.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NetBlocks.Models.Environment;
-using RazorCore.Email;
-using AuthBlocks.DataModels.Identity;
+using SkipperWeb.Shared.Email.Mailtrap;
 
 namespace AuthBlocksWeb.Components.Account;
 

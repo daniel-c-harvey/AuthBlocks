@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
+using AuthBlocksModels.Entities.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -10,7 +11,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
-using AuthBlocks.DataModels.Identity;
 using AuthBlocksWeb.Components.Account.Pages;
 using AuthBlocksWeb.Components.Account.Pages.Manage;
 
