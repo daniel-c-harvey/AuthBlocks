@@ -1,14 +1,10 @@
 ﻿using System.Globalization;
-using DataBlocks.DataAccess;
-using DataBlocks.DataAdapters;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using AuthBlocksWeb.Components.Account;
-using AuthBlocks.DataModels.Identity;
-using AuthBlocksWeb.Identity.Stores;
 
 namespace AuthBlocksWeb;
 
