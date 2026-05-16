@@ -1,0 +1,227 @@
+@using AuthBlocksModels.ApiModels
+@using AuthBlocksModels.Models
+@using AuthBlocksModels.SystemDefinitions
+@using AuthBlocksWeb.Components.Pages.UserAdmin.Permissions
+
+@attribute [HierarchicalRoleAuthorize(SystemRoleConstants.UserAdmin)]
+@page "/useradmin/permissions"
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-5">
+    <MudCard>
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree"/>
+                    <MudText Typo="Typo.h5">User Permissions</MudText>
+                </MudStack>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudAutocomplete T="UserModel"
+                             Label="Find user"
+                             Placeholder="Search by username or email..."
+                             SearchFunc="SearchUsers"
+                             ToStringFunc="UserToDisplay"
+                             Value="_selectedUser"
+                             ValueChanged="OnUserSelected"
+                             ResetValueOnEmptyText="true"
+                             CoerceText="true"
+                             Variant="Variant.Outlined"
+                             Clearable="true"
+                             MinCharacters="0"
+                             Adornment="Adornment.Start"
+                             AdornmentIcon="@Icons.Material.Filled.Search"
+                             Immediate="true"/>
+
+            @if (_loadError is not null)
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-4">@_loadError</MudAlert>
+            }
+
+            @if (_selectedUser is not null)
+            {
+                <MudDivider Class="my-4"/>
+
+                <MudText Typo="Typo.subtitle1">Current roles</MudText>
+                @if (_isLoadingRoles)
+                {
+                    <MudProgressLinear Indeterminate="true" Class="my-2"/>
+                }
+                else if (_currentRoles.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Class="my-2">This user has no roles assigned.</MudText>
+                }
+                else
+                {
+                    <MudChipSet T="string" Class="my-2">
+                        @foreach (var role in _currentRoles)
+                        {
+                            var roleName = role.Name;
+                            <MudChip T="string"
+                                     Text="@roleName"
+                                     Color="Color.Primary"
+                                     OnClose="@(() => RevokeRole(roleName))"
+                                     CloseIcon="@Icons.Material.Filled.Close"
+                                     Disabled="@_isMutating"/>
+                        }
+                    </MudChipSet>
+                }
+
+                <MudDivider Class="my-4"/>
+
+                <MudText Typo="Typo.subtitle1">Assign role</MudText>
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
+                    <MudSelect T="RoleInfo"
+                               Label="Role"
+                               Value="_roleToAssign"
+                               ValueChanged="@((RoleInfo? v) => _roleToAssign = v)"
+                               Variant="Variant.Outlined"
+                               Dense="true"
+                               Clearable="true"
+                               ToStringFunc="RoleToDisplay"
+                               Disabled="@(_assignableRoles.Count == 0)">
+                        @foreach (var role in _assignableRoles)
+                        {
+                            <MudSelectItem T="RoleInfo" Value="@role">@RoleToDisplay(role)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="AssignRole"
+                               Disabled="@(_roleToAssign is null || _isMutating)">
+                        Assign
+                    </MudButton>
+                </MudStack>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    [Inject] public required PermissionsViewModel ViewModel { get; set; }
+    [Inject] public required ISnackbar Snackbar { get; set; }
+
+    private UserModel? _selectedUser;
+    private List<RoleInfo> _currentRoles = new();
+    private List<RoleInfo> _allRoles = new();
+    private RoleInfo? _roleToAssign;
+    private bool _isLoadingRoles;
+    private bool _isMutating;
+    private string? _loadError;
+
+    private List<RoleInfo> _assignableRoles
+        => _allRoles.Where(r => _currentRoles.All(c => !string.Equals(c.Name, r.Name, StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await ViewModel.GetAllRoles();
+        if (result is { Success: true, Value: { } roles })
+        {
+            _allRoles = roles.OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
+        }
+        else
+        {
+            _loadError = "Failed to load role hierarchy.";
+        }
+    }
+
+    private async Task<IEnumerable<UserModel>> SearchUsers(string? search, CancellationToken ct)
+        => await ViewModel.SearchUsers(search, ct);
+
+    private static string UserToDisplay(UserModel? user)
+        => user is null ? string.Empty : $"{user.UserName} <{user.Email}>";
+
+    private static string RoleToDisplay(RoleInfo? role)
+    {
+        if (role is null) return string.Empty;
+        return string.IsNullOrEmpty(role.ParentRoleName)
+            ? role.Name
+            : $"{role.Name} (under {role.ParentRoleName})";
+    }
+
+    private async Task OnUserSelected(UserModel? user)
+    {
+        _selectedUser = user;
+        _currentRoles = new List<RoleInfo>();
+        _roleToAssign = null;
+        _loadError = null;
+        if (user is null) return;
+
+        await LoadRolesForSelectedUser();
+    }
+
+    private async Task LoadRolesForSelectedUser()
+    {
+        if (_selectedUser is null) return;
+
+        _isLoadingRoles = true;
+        try
+        {
+            var result = await ViewModel.GetRolesForUser(_selectedUser.Id);
+            if (result is { Success: true, Value: { } roles })
+            {
+                _currentRoles = roles.OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            }
+            else
+            {
+                _loadError = "Failed to load roles for the selected user.";
+            }
+        }
+        finally
+        {
+            _isLoadingRoles = false;
+        }
+    }
+
+    private async Task AssignRole()
+    {
+        if (_selectedUser is null || _roleToAssign is null || _isMutating) return;
+
+        _isMutating = true;
+        try
+        {
+            var roleName = _roleToAssign.Name;
+            var result = await ViewModel.AssignRole(_selectedUser.Id, roleName);
+            if (result.Success)
+            {
+                Snackbar.Add($"Assigned '{roleName}'.", Severity.Success);
+                _roleToAssign = null;
+                await LoadRolesForSelectedUser();
+            }
+            else
+            {
+                Snackbar.Add($"Failed to assign role: {string.Join("; ", result.Messages.Select(m => m.Message))}", Severity.Error);
+            }
+        }
+        finally
+        {
+            _isMutating = false;
+        }
+    }
+
+    private async Task RevokeRole(string roleName)
+    {
+        if (_selectedUser is null || _isMutating) return;
+
+        _isMutating = true;
+        try
+        {
+            var result = await ViewModel.RevokeRole(_selectedUser.Id, roleName);
+            if (result.Success)
+            {
+                Snackbar.Add($"Revoked '{roleName}'.", Severity.Success);
+                await LoadRolesForSelectedUser();
+            }
+            else
+            {
+                Snackbar.Add($"Failed to revoke role: {string.Join("; ", result.Messages.Select(m => m.Message))}", Severity.Error);
+            }
+        }
+        finally
+        {
+            _isMutating = false;
+        }
+    }
+}

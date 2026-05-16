@@ -1,0 +1,85 @@
+﻿@using System.Globalization
+@using AuthBlocksModels.Converters
+@using AuthBlocksModels.InputModels
+@using AuthBlocksWeb.ApiClients
+
+@if (Model is not null)
+{
+    <MudGrid Spacing="3">
+        <MudItem xs="12" sm="9">
+            <MudTextField Label="Email" 
+                          @bind-Value="@Model.Email"
+                          For="() => Model.Email"
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Email"
+                          AdornmentColor="Color.Primary" 
+                          Disabled="true"/>
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudCheckBox Label="Registered"
+                         @bind-Value="Model.IsConsumed"
+                         For="() => Model.IsConsumed"
+                         Color="Color.Primary"/>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudStack>
+                <MudDatePicker Label="Registration Date"
+                               @bind-Date="Model.ConsumedAtDate"
+                               For="() => Model.ConsumedAtDate"
+                               Disabled="!Model.IsConsumed"/>
+                <MudTimePicker Label="Registration Time"
+                               @bind-Time="Model.ConsumedAtTime"
+                               For="() => Model.ConsumedAtTime"
+                               Disabled="!Model.IsConsumed"/>
+            </MudStack>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudStack>
+                <MudDatePicker Label="Expiry Date"
+                               @bind-Date="Model.ExpiresAtDate"
+                               For="() => Model.ExpiresAtDate"/>
+                <MudTimePicker Label="Expiry Time"
+                               @bind-Time="Model.ExpiresAtTime"
+                               For="() => Model.ExpiresAtTime"/>
+            </MudStack>
+        </MudItem>
+        <MudItem xs="12">
+            @if (_roles is not null)
+            {
+                <MudItem xs="12" sm="5">
+                    <MudSelect T="RoleInputModel"
+                               Label="Role(s)"
+                               @bind-SelectedValues="Model.Roles"
+                               MultiSelection="true"
+                               Variant="Variant.Outlined"
+                               Dense="true"
+                               Clearable="true">
+                        @foreach (var role in _roles)
+                        {
+                            <MudSelectItem T="RoleInputModel" Value="@role">@role.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    private IEnumerable<RoleInputModel>? _roles;
+
+    [Parameter] public PendingRegistrationInputModel? Model { get; set; }
+    [Inject] public required RoleClient RoleClient { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        var result = await RoleClient.GetAll();
+        if (result is { Success: false } or { Value: null }) 
+            return;
+        
+        _roles = result.Value.Select(RoleModelToInputConverter.Convert);
+    }
+}

@@ -1,0 +1,14 @@
+﻿@using AuthBlocksModels.InputModels
+@using Web.Shared.Maintenance.Entities
+
+@implements Web.Shared.Maintenance.Entities.IEditModal<UserInputModel>
+
+<EditModelModal TModel="UserInputModel"
+                Model="Model">
+    <EditUserForm Model="Model" />
+</EditModelModal>
+
+@code {
+    [Parameter]
+    public required UserInputModel Model { get; set; }
+}

@@ -1,0 +1,159 @@
+@page "/account/register"
+@using AuthBlocksModels.ApiModels
+@using AuthBlocksWeb.HierarchicalAuthorize
+@using AuthBlocksWeb.Services
+@using NetBlocks.Models
+@using Web.Shared.Result
+@inject JwtAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Register</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <EditForm Model="Input" OnValidSubmit="RegisterUser" FormName="register">
+        <DataAnnotationsValidator />
+        <MudCard>
+            <MudCardHeader Class="mud-theme-primary">
+                <MudText Typo="Typo.h5">Register a new account.</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudGrid Class="my-5" Spacing="3">
+                    <MudItem xs="12" Class="justify-center">
+                        <MudTextField Label="Registration Code"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Code"
+                                      AdornmentColor="Color.Primary"
+                                      Placeholder="Enter your registration code"
+                                      Variant="Variant.Outlined"
+                                      HelperText="Please enter your provided Registration Code."
+                                      @bind-Value="Input.RegistrationCode"
+                                      For="() => Input.RegistrationCode"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField Label="Username"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Person"
+                                      AdornmentColor="Color.Primary"
+                                      Placeholder="Enter your username"
+                                      Variant="Variant.Outlined"
+                                      @bind-Value="Input.UserName"
+                                      For="() => Input.UserName"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField Label="Email"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Email"
+                                      AdornmentColor="Color.Primary"
+                                      Placeholder="Enter your email"
+                                      Variant="Variant.Outlined"
+                                      @bind-Value="Input.Email"
+                                      For="() => Input.Email"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField Label="Password"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Lock"
+                                      AdornmentColor="Color.Primary"
+                                      Placeholder="Enter your password"
+                                      Variant="Variant.Outlined"
+                                      InputType="InputType.Password"
+                                      @bind-Value="Input.Password"
+                                      For="() => Input.Password"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField Label="Confirm Password"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Lock"
+                                      AdornmentColor="@((Input.Password.Equals(Input.ConfirmPassword)) ? Color.Success : Color.Error)"
+                                      Placeholder="Confirm your password"
+                                      Variant="Variant.Outlined"
+                                      InputType="InputType.Password"
+                                      @bind-Value="Input.ConfirmPassword"
+                                      For="() => Input.ConfirmPassword"/>
+                    </MudItem>
+                    @if (_error != null)
+                    {
+                        <MudSpacer/>
+                        <MudItem xs="12" Class="pa-5">
+                            <ResultDetails Result="_error" />
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudCardContent>
+            <MudCardActions Class="justify-center pb-4">
+                <MudStack Row Breakpoint="Breakpoint.Md" Spacing="4">
+                    <MudButton StartIcon="@((_isLoading) ? Icons.Material.Filled.Refresh : null)"
+                               Disabled="_isLoading"
+                               Color="Color.Primary"
+                               Variant="Variant.Filled"
+                               ButtonType="ButtonType.Submit">
+                        @(_isLoading ? "Creating account..." : "Register")
+                    </MudButton>
+                    <MudButton Href="/account/login"
+                               Color="Color.Secondary"
+                               Variant="Variant.Outlined">
+                        Have an existing account?
+                    </MudButton>
+                </MudStack>
+            </MudCardActions>
+        </MudCard>
+    </EditForm>
+</MudContainer>
+
+@code {
+    private Result? _error;
+    private bool _isLoading;
+
+    private static Dictionary<string, object> _inputAttributes = [];
+
+    [SupplyParameterFromQuery]
+    public string? UserEmail { get; set; }
+    
+    [SupplyParameterFromQuery]
+    public string? RegistrationToken { get; set; }
+    
+    [SupplyParameterFromForm]
+    private RegisterRequest Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (UserEmail is not null && string.IsNullOrEmpty(Input.Email)) 
+            Input.Email = UserEmail;
+        if (RegistrationToken is not null && string.IsNullOrEmpty(Input.RegistrationCode)) 
+            Input.RegistrationCode = RegistrationToken;
+        base.OnParametersSet();
+    }
+
+    public async Task RegisterUser()
+    {
+        _isLoading = true;
+        _error = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await AuthStateProvider.RegisterAsync(Input);
+            
+            if (result.Success)
+            {
+                Navigation.NavigateTo(ReturnUrl ?? "/");
+            }
+            else
+            {
+                _error = result;
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = Result.CreateFailResult("An error occurred during registration. Please try again.");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

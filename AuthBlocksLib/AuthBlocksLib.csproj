@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Cerebellum.AuthBlocks</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Daniel Harvey</Authors>
+    <Company>Cerebellum Softworks</Company>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/daniel-c-harvey/AuthBlocks</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/daniel-c-harvey/AuthBlocks.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Cerebellum.NetBlocks" Version="10.2.0" />
+    <ProjectReference Include="..\AuthBlocksModels\AuthBlocksModels.csproj" />
+    <ProjectReference Include="..\AuthBlocksData\AuthBlocksData.csproj" />
+    <ProjectReference Include="../../BlazorBlocks/API.Shared/API.Shared.csproj" />
+    <ProjectReference Include="../../NetBlocks/Models.Shared/Models.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

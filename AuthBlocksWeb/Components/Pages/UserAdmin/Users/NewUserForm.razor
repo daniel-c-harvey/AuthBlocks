@@ -1,0 +1,40 @@
+﻿<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-5">
+    <EditForm Model="Input" method="post" OnValidSubmit="X" FormName="new-entry">
+        <DataAnnotationsValidator/>
+        <MudCard Class="rounded-tb-xl">
+            <MudCardHeader Class="mud-theme-primary">
+                <MudText Typo="Typo.h5" Align="Align.Center">
+                    <MudStack Row AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Outlined.AddCircleOutline"/>
+                        Activate New User
+                    </MudStack>
+                </MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText Typo="Typo.body1">
+                    Create a new user account, bypassing email registration.  The password must be provided now.
+                </MudText>
+                <MudSpacer/>
+                <MudTextField Variant="Variant.Outlined"
+                              Label="Email"
+                              @bind-Text="Input.Email"
+                              For="() => Input.Email">
+
+                </MudTextField>
+            </MudCardContent>
+            <MudCardActions Class="pa-4">
+                <MudButton Href="@($"/useradmin/users")" StartIcon="@Icons.Material.Outlined.ArrowBack" Color="Color.Secondary"
+                           Variant="Variant.Filled">Back to users
+                </MudButton>
+                <MudSpacer/>
+                <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Outlined.Save"
+                           Color="Color.Primary" Variant="Variant.Filled">Send Registration Code
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+        <MudSpacer/>
+        <MudPaper Class="my-2">
+            <ValidationSummary class="mx-2 pa-5"/>
+        </MudPaper>
+    </EditForm>
+</MudContainer>

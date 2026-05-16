@@ -1,0 +1,34 @@
+@using System.Diagnostics
+@using AuthBlocksWeb.HierarchicalAuthorize
+
+<MudNavGroup HeaderClass="ps-1">
+    <TitleContent>
+        <HierarchicalRoleAuthorizeView>
+            <Authorized>
+                <MudStack Row AlignItems="AlignItems.Center">
+                    <MudAvatar Size="Size.Small">
+                        @(char.ToUpper(context.User.Identity?.Name?.FirstOrDefault() ?? '?'))
+                    </MudAvatar>
+                    <MudText>Welcome, @context.User.Identity?.Name</MudText>
+                </MudStack>
+            </Authorized>
+            <NotAuthorized>
+                <MudStack Row AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountCircle" Size="Size.Medium"/>
+                    <MudText>User Account</MudText>
+                </MudStack>
+            </NotAuthorized>
+        </HierarchicalRoleAuthorizeView>
+    </TitleContent>
+    <ChildContent>
+        <HierarchicalRoleAuthorizeView>
+            <Authorized>
+                <MudNavLink Href="/account/logout" Match="NavLinkMatch.All">Logout</MudNavLink>
+            </Authorized>
+            <NotAuthorized>
+                <MudNavLink Href="/account/login" Match="NavLinkMatch.All">Login</MudNavLink>
+                <MudNavLink Href="/account/register" Match="NavLinkMatch.All">Register</MudNavLink>
+            </NotAuthorized>
+        </HierarchicalRoleAuthorizeView>
+    </ChildContent>
+</MudNavGroup>

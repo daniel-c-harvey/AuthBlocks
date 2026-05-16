@@ -1,0 +1,26 @@
+﻿@using AuthBlocksModels.ApiModels
+@using NetBlocks.Models
+@using Web.Shared.Result
+@using Web.Shared.Modal
+
+<ResultModal TResult="RegistrationCreatedResult"
+             ResultTask="ResultTask">
+    <Success Context="result">
+        <MudText Align="Align.Center">Registration has been <MudText Inline="true" Color="Color.Success">submitted</MudText>.</MudText>
+        <MudText Align="Align.Center">An email has been sent to: @result.RegistrationEmail</MudText>
+    </Success>
+    <Failure Context="result">
+        <MudText>Registration was <MudText Inline="true" Color="Color.Error">NOT</MudText> submitted:</MudText>
+        <MudContainer Class="pa-5" MaxWidth="MaxWidth.Small">
+            <ResultDetails Result="result"/>
+        </MudContainer>
+    </Failure>
+</ResultModal>
+    
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] 
+    public required Task<RegistrationCreatedResult> ResultTask { get; set; }
+}

@@ -1,0 +1,11 @@
+﻿@if (!string.IsNullOrEmpty(Message))
+{
+    <MudPaper Class="">
+        @Message
+    </MudPaper>
+}
+
+@code {
+    [Parameter]
+    public string? Message { get; set; }
+}

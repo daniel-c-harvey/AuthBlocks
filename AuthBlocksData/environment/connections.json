@@ -1,0 +1,9 @@
+{
+  "ActiveConnectionID": 1,
+  "ConnectionStrings": [
+    {
+      "ID": 1,
+      "ConnectionString": "Host=localhost;Database=skipper-test;Username=test-agent;Password=test!agent1;Port=5432"
+    }
+  ]
+} 

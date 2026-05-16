@@ -1,0 +1,91 @@
+﻿@using AuthBlocksModels.Converters
+@using AuthBlocksModels.InputModels
+@using AuthBlocksModels.Models
+@using Web.Shared.Maintenance.Entities
+@using Web.Shared.Modal
+
+@attribute [HierarchicalRoleAuthorize(SystemRoleConstants.UserAdmin)]
+@page "/useradmin/users"
+
+<ModelView @ref="_modelView"
+           T="UserInputModel"
+           TModel="UserModel"
+           TViewModel="UsersViewModel"
+           TEditModal="UserEditModal"
+           TConverter="UserModelToInputConverter"
+           ModelDisplayName="User"
+           Placeholder="Search users..."
+           PageRoute="useradmin/users"
+           Title="Users">
+    <Columns>
+        <PropertyColumn Property="x => x.UserName" Title="Name"/>
+        <PropertyColumn Property="x => x.Email" Title="Email"/>
+        <PropertyColumn Property="x => x.PhoneNumber" Title="Phone #"/>
+        <PropertyColumn Property="x => x.AccessFailedCount" Title="Access Fails"/>
+        <PropertyColumn Property="x => x.TwoFactorEnabled" Title="Two Factor"/>
+        <TemplateColumn>
+            <CellTemplate Context="cell">
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Tertiary"
+                           OnClick="@(() => ResetPassword(cell.Item))">
+                    Reset Password
+                </MudButton>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <DeleteAction Context="item">
+        <MudButton OnClick="@(() => Deactivate(item))"
+                   Color="@DeactivateColor(item)"
+                   Variant="Variant.Outlined"
+                   Disabled="@DeactivateDisabled(item)"
+                   StartIcon="@Icons.Material.Filled.Delete">
+            @DeactivateText(item)
+        </MudButton>
+    </DeleteAction>
+</ModelView>
+
+@code {
+    [Inject]
+    public required IDialogService DialogService { get; set; }
+    
+    private ModelView<UserInputModel, UserModel, UserEditModal, UsersViewModel, UserModelToInputConverter> _modelView;
+
+    private async Task ResetPassword(UserInputModel? item)
+    {
+        // todo integrate with email for secure reset
+    }
+
+    private MudBlazor.Color DeactivateColor(UserInputModel user)
+    {
+        return (user.IsDeactivated) ? Color.Tertiary : Color.Error;
+    }
+    
+    private string DeactivateText(UserInputModel user)
+    {
+        return (user.IsDeactivated) ? "Reactivate" : "Deactivate";
+    }
+
+    private bool DeactivateDisabled(UserInputModel user)
+    {
+        return !user.CanDelete;
+    }
+
+    private async Task Deactivate(UserInputModel item)
+    {
+        var action = item.IsDeactivated ? "Reactivate" : "Deactivate";
+        var message = $"Are you sure you want to {action.ToLower()} this user?";
+        var parameters = new DialogParameters<ConfirmCancelModal>
+        {
+            { x => x.BodyText, message },
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmCancelModal>($"{action} User", parameters);
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+        {
+            await _modelView.ViewModel.ToggleDeactivated(item);
+            await _modelView.RefreshGridData();
+        }
+    }
+
+}

@@ -1,0 +1,63 @@
+﻿@using AuthBlocksModels.InputModels
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-5">
+    <EditForm Model="Input" method="post" OnValidSubmit="CreatePendingRegistration" FormName="new-entry">
+        <DataAnnotationsValidator/>
+        <MudCard Class="rounded-tb-xl">
+            <MudCardHeader Class="mud-theme-primary">
+                <MudText Typo="Typo.h5" Align="Align.Center">
+                    <MudStack Row AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Outlined.AddCircleOutline"/>
+                        Provision New User
+                    </MudStack>
+                </MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText Typo="Typo.body1">
+                    A registration code and link will be sent to the email address provided.
+                </MudText>
+                <MudSpacer/>
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" sm="7">
+                        <MudTextField Variant="Variant.Outlined"
+                                      Label="Email"
+                                      @bind-Text="Input.Email"
+                                      For="() => Input.Email"/>
+                    </MudItem>
+                    @if (_roles is not null)
+                    {
+                        <MudItem xs="12" sm="5">
+                            <MudSelect T="RoleInputModel"
+                                       Label="Role(s)"
+                                       @bind-SelectedValues="Input.Roles"
+                                       MultiSelection="true"
+                                       MultiSelectionTextFunc="@(list => list is null || !list.Any() 
+                                                                    ? "Assign Role" 
+                                                                    : $"Assigned Roles: {string.Join(",", list)}" )"
+                                       Variant="Variant.Outlined"
+                                       Dense="true"
+                                       Clearable="true">
+                                @foreach (var role in _roles)
+                                {
+                                    <MudSelectItem T="RoleInputModel" Value="@role">@role.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudCardContent>
+            <MudCardActions Class="pa-4">
+                <MudButton Href="@($"/useradmin/registrations")" StartIcon="@Icons.Material.Outlined.ArrowBack" Color="Color.Secondary"
+                           Variant="Variant.Filled">Back to users
+                </MudButton>
+                <MudSpacer/>
+                <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Outlined.Save"
+                           Color="Color.Primary" Variant="Variant.Filled">Send Registration Code
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+        <MudSpacer/>
+        <MudPaper Class="my-2">
+            <ValidationSummary class="mx-2 pa-5"/>
+        </MudPaper>
+    </EditForm>
+</MudContainer>

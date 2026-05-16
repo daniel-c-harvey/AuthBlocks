@@ -1,0 +1,61 @@
+﻿@page "/account/logout"
+@using AuthBlocksModels.ApiModels
+@using AuthBlocksWeb.HierarchicalAuthorize
+@using AuthBlocksWeb.Services
+@using Microsoft.AspNetCore.Http
+@inject JwtAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+
+<MudContainer Class="py-5 ma-3">
+    <HierarchicalRoleAuthorizeView>
+        <Authorized>
+            <MudText Typo="Typo.h6">Logging Out @context.User?.Identity?.Name...</MudText>
+        </Authorized>
+        <NotAuthorized>
+            <MudStack AlignItems="AlignItems.Start">
+                <MudText Typo="Typo.h6">You have been logged out.</MudText>
+                <MudButton StartIcon="@Icons.Material.Outlined.ArrowBack" 
+                           Variant="Variant.Outlined"
+                           OnClick="Return">
+                    Return to previous page
+                </MudButton>
+            </MudStack>
+        </NotAuthorized>
+    </HierarchicalRoleAuthorizeView>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromForm]
+    private LoginRequest Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if user is already authenticated
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            await LogoutUser();
+        }
+    }
+
+    private async Task LogoutUser()
+    {
+        try
+        {
+            await AuthStateProvider.LogoutAsync();
+            Return();
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+    private void Return()
+    {
+        Navigation.NavigateTo(ReturnUrl ?? "/", forceLoad: true);
+    }
+}

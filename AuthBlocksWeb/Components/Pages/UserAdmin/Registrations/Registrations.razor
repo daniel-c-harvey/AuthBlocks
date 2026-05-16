@@ -1,0 +1,25 @@
+﻿@using AuthBlocksModels.Converters
+@using AuthBlocksModels.InputModels
+@using AuthBlocksModels.Models
+@using Web.Shared.Maintenance.Entities
+@using Web.Shared.Modal
+
+@attribute [HierarchicalRoleAuthorize(SystemRoleConstants.UserAdmin)]
+@page "/useradmin/registrations"
+
+<ModelView T="PendingRegistrationInputModel"
+           TModel="PendingRegistrationModel"
+           TViewModel="RegistrationsViewModel"
+           TEditModal="RegistrationEditModal"
+           TConverter="PendingRegistrationModelToInputConverter"
+           ModelDisplayName="Registration"
+           Placeholder="Search registrations..."
+           PageRoute="useradmin/registrations"
+           Title="Registrations">
+    <Columns>
+        <PropertyColumn Property="x => x.Email" Title="Registration Email"/>
+        <PropertyColumn Property="x => x.IsConsumed" Title="Registered"/>
+        <PropertyColumn Property="x => x.ConsumedAt" Title="Registration Date"/>
+        <PropertyColumn Property="x => x.ExpiresAt" Title="Registration Expiry Date"/>
+    </Columns>
+</ModelView>

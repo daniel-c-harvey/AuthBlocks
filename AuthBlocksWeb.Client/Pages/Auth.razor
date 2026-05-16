@@ -1,0 +1,13 @@
+﻿@page "/auth"
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+@rendermode InteractiveAuto
+
+<PageTitle>Auth</PageTitle>
+
+<h1>You are authenticated</h1>
+
+<AuthorizeView> @* TODO make the heirachy thing work on client side *@
+    Hello @context.User.Identity?.Name!
+</AuthorizeView>

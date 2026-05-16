@@ -1,0 +1,50 @@
+@using AuthBlocksWeb.HierarchicalAuthorize
+@using AuthBlocksWeb.Services
+@inject JwtAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<form @onsubmit="@OnLogoutAsync" @onsubmit:preventDefault="true">
+    <button type="submit" class="nav-link btn btn-link" disabled="@isLoggingOut">
+        @if (isLoggingOut)
+        {
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <text> Logging out...</text>
+        }
+        else
+        {
+            <text>Logout</text>
+        }
+    </button>
+</form>
+
+@code {
+    private bool isLoggingOut;
+
+    private async Task OnLogoutAsync()
+    {
+        isLoggingOut = true;
+        StateHasChanged();
+
+        try
+        {
+            await AuthStateProvider.LogoutAsync();
+            Navigation.NavigateTo("/");
+        }
+        catch
+        {
+            // Handle logout error if needed
+        }
+        finally
+        {
+            isLoggingOut = false;
+            StateHasChanged();
+        }
+    }
+}
+
+<style>
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+    }
+</style> 

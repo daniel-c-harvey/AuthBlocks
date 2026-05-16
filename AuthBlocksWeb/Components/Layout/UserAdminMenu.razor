@@ -1,0 +1,10 @@
+﻿@using AuthBlocksModels.SystemDefinitions
+<HierarchicalRoleAuthorizeView RolesList="@([SystemRoleConstants.UserAdmin])">
+    <Authorized>
+        <MudNavGroup Icon="@Icons.Material.Filled.Person2" Title="User Administration" Expanded="false">
+            <MudNavLink Href="/useradmin/users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AccountCircle">User Accounts</MudNavLink>
+            <MudNavLink Href="/useradmin/registrations" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ManageAccounts">Registrations</MudNavLink>
+            <MudNavLink Href="/useradmin/permissions" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AccountTree">User Permissions</MudNavLink>
+        </MudNavGroup>
+    </Authorized>
+</HierarchicalRoleAuthorizeView>

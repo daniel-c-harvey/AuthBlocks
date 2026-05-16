@@ -1,0 +1,216 @@
+﻿@page "/theme-colors"
+
+<PageTitle>Theme Colors Demo</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h3" GutterBottom="true" Class="mb-6">
+        <MudIcon Icon="Icons.Material.Filled.Palette" Class="mr-3" />
+        MudBlazor Theme Colors
+    </MudText>
+
+    <MudText Typo="Typo.body1" Class="mb-6">
+        This page demonstrates all available colors in the current MudBlazor theme. Each color is shown with its name, hex value, and visual representation.
+    </MudText>
+
+    <!-- Primary Colors -->
+    <MudPaper Class="pa-4 mb-6" Elevation="2">
+        <MudText Typo="Typo.h5" Class="mb-4">Primary Colors</MudText>
+        <MudGrid>
+            @foreach (var color in PrimaryColors)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Class="mb-2">
+                        <MudCardContent Class="pa-2">
+                            <div style="background-color: @color.Value; height: 60px; width: 100%; border-radius: 4px; margin-bottom: 8px;"></div>
+                            <MudText Typo="Typo.body2" Style="font-weight: 500;">@color.Name</MudText>
+                            <MudText Typo="Typo.caption" Style="color: var(--mud-palette-text-secondary);">@color.Value</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Secondary Colors -->
+    <MudPaper Class="pa-4 mb-6" Elevation="2">
+        <MudText Typo="Typo.h5" Class="mb-4">Secondary Colors</MudText>
+        <MudGrid>
+            @foreach (var color in SecondaryColors)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Class="mb-2">
+                        <MudCardContent Class="pa-2">
+                            <div style="background-color: @color.Value; height: 60px; width: 100%; border-radius: 4px; margin-bottom: 8px;"></div>
+                            <MudText Typo="Typo.body2" Style="font-weight: 500;">@color.Name</MudText>
+                            <MudText Typo="Typo.caption" Style="color: var(--mud-palette-text-secondary);">@color.Value</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Surface Colors -->
+    <MudPaper Class="pa-4 mb-6" Elevation="2">
+        <MudText Typo="Typo.h5" Class="mb-4">Surface Colors</MudText>
+        <MudGrid>
+            @foreach (var color in SurfaceColors)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Class="mb-2">
+                        <MudCardContent Class="pa-2">
+                            <div style="background-color: @color.Value; height: 60px; width: 100%; border-radius: 4px; margin-bottom: 8px; border: 1px solid var(--mud-palette-divider);"></div>
+                            <MudText Typo="Typo.body2" Style="font-weight: 500;">@color.Name</MudText>
+                            <MudText Typo="Typo.caption" Style="color: var(--mud-palette-text-secondary);">@color.Value</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Status Colors -->
+    <MudPaper Class="pa-4 mb-6" Elevation="2">
+        <MudText Typo="Typo.h5" Class="mb-4">Status Colors</MudText>
+        <MudGrid>
+            @foreach (var color in StatusColors)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Class="mb-2">
+                        <MudCardContent Class="pa-2">
+                            <div style="background-color: @color.Value; height: 60px; width: 100%; border-radius: 4px; margin-bottom: 8px;"></div>
+                            <MudText Typo="Typo.body2" Style="font-weight: 500;">@color.Name</MudText>
+                            <MudText Typo="Typo.caption" Style="@("color: var(--mud-palette-text-secondary);")">@color.Value</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Color Variations Demo -->
+    <MudPaper Class="pa-4 mb-6" Elevation="2">
+        <MudText Typo="Typo.h5" Class="mb-4">Color Usage Examples</MudText>
+        <MudGrid>
+            @foreach (var mudColor in Enum.GetValues<Color>().Where(c => c != Color.Inherit && c != Color.Default))
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Class="mb-2">
+                        <MudCardContent Class="pa-2">
+                            <MudButton Color="@mudColor" Variant="Variant.Filled" FullWidth="true" Class="mb-2">
+                                @mudColor.ToString()
+                            </MudButton>
+                            <MudChip T="string" Color="@mudColor" Size="Size.Small">@mudColor.ToString()</MudChip>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Interactive Color Picker -->
+    <MudPaper Class="pa-4 mb-6" Elevation="2">
+        <MudText Typo="Typo.h5" Class="mb-4">Interactive Color Demo</MudText>
+        <MudSelect T="Color" Label="Select a Color" @bind-Value="selectedColor" AnchorOrigin="Origin.BottomCenter">
+            @foreach (var color in Enum.GetValues<Color>().Where(c => c != Color.Inherit && c != Color.Default))
+            {
+                <MudSelectItem Value="@color">@color.ToString()</MudSelectItem>
+            }
+        </MudSelect>
+        
+        <div class="mt-4">
+            <MudAlert Severity="Severity.Info">
+                <MudText Color="@selectedColor">Selected Color: @selectedColor.ToString()</MudText>
+            </MudAlert>
+            
+            <div class="mt-2">
+                <MudButton Color="@selectedColor" Variant="Variant.Filled" Class="mr-2">Filled Button</MudButton>
+                <MudButton Color="@selectedColor" Variant="Variant.Outlined" Class="mr-2">Outlined Button</MudButton>
+                <MudButton Color="@selectedColor" Variant="Variant.Text">Text Button</MudButton>
+            </div>
+        </div>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private Color selectedColor = Color.Primary;
+
+    private List<ColorInfo> PrimaryColors = new()
+    {
+        new ColorInfo("Primary", "var(--mud-palette-primary)"),
+        new ColorInfo("Primary Darken", "var(--mud-palette-primary-darken)"),
+        new ColorInfo("Primary Lighten", "var(--mud-palette-primary-lighten)"),
+        new ColorInfo("Primary Text", "var(--mud-palette-primary-text)"),
+        new ColorInfo("Primary Hover", "var(--mud-palette-primary-hover)"),
+    };
+
+    private List<ColorInfo> SecondaryColors = new()
+    {
+        new ColorInfo("Secondary", "var(--mud-palette-secondary)"),
+        new ColorInfo("Secondary Darken", "var(--mud-palette-secondary-darken)"),
+        new ColorInfo("Secondary Lighten", "var(--mud-palette-secondary-lighten)"),
+        new ColorInfo("Secondary Text", "var(--mud-palette-secondary-text)"),
+        new ColorInfo("Secondary Hover", "var(--mud-palette-secondary-hover)"),
+    };
+
+    private List<ColorInfo> SurfaceColors = new()
+    {
+        new ColorInfo("Surface", "var(--mud-palette-surface)"),
+        new ColorInfo("Background", "var(--mud-palette-background)"),
+        new ColorInfo("Background Gray", "var(--mud-palette-background-gray)"),
+        new ColorInfo("App Background", "var(--mud-palette-app-background)"),
+        new ColorInfo("Drawer Background", "var(--mud-palette-drawer-background)"),
+        new ColorInfo("Text Primary", "var(--mud-palette-text-primary)"),
+        new ColorInfo("Text Secondary", "var(--mud-palette-text-secondary)"),
+        new ColorInfo("Text Disabled", "var(--mud-palette-text-disabled)"),
+        new ColorInfo("Action Default", "var(--mud-palette-action-default)"),
+        new ColorInfo("Action Disabled", "var(--mud-palette-action-disabled)"),
+        new ColorInfo("Action Disabled Background", "var(--mud-palette-action-disabled-background)"),
+        new ColorInfo("Divider", "var(--mud-palette-divider)"),
+        new ColorInfo("Divider Light", "var(--mud-palette-divider-light)"),
+        new ColorInfo("Table Lines", "var(--mud-palette-table-lines)"),
+        new ColorInfo("Table Striped", "var(--mud-palette-table-striped)"),
+        new ColorInfo("Table Hover", "var(--mud-palette-table-hover)"),
+    };
+
+    private List<ColorInfo> StatusColors = new()
+    {
+        new ColorInfo("Success", "var(--mud-palette-success)"),
+        new ColorInfo("Success Darken", "var(--mud-palette-success-darken)"),
+        new ColorInfo("Success Lighten", "var(--mud-palette-success-lighten)"),
+        new ColorInfo("Success Text", "var(--mud-palette-success-text)"),
+        new ColorInfo("Success Hover", "var(--mud-palette-success-hover)"),
+        new ColorInfo("Info", "var(--mud-palette-info)"),
+        new ColorInfo("Info Darken", "var(--mud-palette-info-darken)"),
+        new ColorInfo("Info Lighten", "var(--mud-palette-info-lighten)"),
+        new ColorInfo("Info Text", "var(--mud-palette-info-text)"),
+        new ColorInfo("Info Hover", "var(--mud-palette-info-hover)"),
+        new ColorInfo("Warning", "var(--mud-palette-warning)"),
+        new ColorInfo("Warning Darken", "var(--mud-palette-warning-darken)"),
+        new ColorInfo("Warning Lighten", "var(--mud-palette-warning-lighten)"),
+        new ColorInfo("Warning Text", "var(--mud-palette-warning-text)"),
+        new ColorInfo("Warning Hover", "var(--mud-palette-warning-hover)"),
+        new ColorInfo("Error", "var(--mud-palette-error)"),
+        new ColorInfo("Error Darken", "var(--mud-palette-error-darken)"),
+        new ColorInfo("Error Lighten", "var(--mud-palette-error-lighten)"),
+        new ColorInfo("Error Text", "var(--mud-palette-error-text)"),
+        new ColorInfo("Error Hover", "var(--mud-palette-error-hover)"),
+        new ColorInfo("Dark", "var(--mud-palette-dark)"),
+        new ColorInfo("Dark Darken", "var(--mud-palette-dark-darken)"),
+        new ColorInfo("Dark Lighten", "var(--mud-palette-dark-lighten)"),
+        new ColorInfo("Dark Text", "var(--mud-palette-dark-text)"),
+        new ColorInfo("Dark Hover", "var(--mud-palette-dark-hover)"),
+    };
+
+    public class ColorInfo
+    {
+        public string Name { get; set; }
+        public string Value { get; set; }
+
+        public ColorInfo(string name, string value)
+        {
+            Name = name;
+            Value = value;
+        }
+    }
+}

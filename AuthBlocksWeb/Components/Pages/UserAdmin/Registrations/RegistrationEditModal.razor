@@ -1,0 +1,14 @@
+﻿@using AuthBlocksModels.InputModels
+@using Web.Shared.Maintenance.Entities
+
+@implements Web.Shared.Maintenance.Entities.IEditModal<PendingRegistrationInputModel>
+
+<EditModelModal TModel="PendingRegistrationInputModel"
+                Model="Model">
+    <EditRegistrationForm Model="Model" />
+</EditModelModal>
+
+@code {
+    [Parameter]
+    public required PendingRegistrationInputModel Model { get; set; }
+}

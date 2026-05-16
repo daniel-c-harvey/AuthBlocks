@@ -1,0 +1,114 @@
+@page "/account/login"
+@using AuthBlocksModels.ApiModels
+@using AuthBlocksWeb.Services
+
+@inject JwtAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Log in</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <EditForm Model="Input" OnValidSubmit="LoginUser" FormName="login">
+    <MudCard>
+        <MudCardHeader Class="mud-theme-primary">
+                <MudText Typo="Typo.h5">Use a local account to log in.</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            <DataAnnotationsValidator/>
+            <MudGrid Class="my-5" Spacing="3">
+                <MudItem xs="12" md="6">
+                    <MudTextField Label="Email"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Person"
+                                  AdornmentColor="Color.Primary"
+                                  Placeholder="Enter your email"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="Input.Email"
+                                  For="() => Input.Email"/>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField Label="Password"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Lock"
+                                  AdornmentColor="Color.Primary"
+                                  Placeholder="Enter your password"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Password"
+                                  @bind-Value="Input.Password"
+                                  For="() => Input.Password"/>
+                </MudItem>
+                <MudItem xs="12">
+                    <StatusMessage Message="@errorMessage"/>
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+        <MudCardActions Class="justify-center pb-4">
+            <MudStack Row Justify="Justify.Center">
+                <MudButton StartIcon="@((isLoading) ? Icons.Material.Filled.Refresh : null)"
+                           Disabled="isLoading"
+                           Color="Color.Primary"
+                           Variant="Variant.Filled"
+                           ButtonType="ButtonType.Submit">
+                    @(isLoading ? "Logging in..." : "Log in")
+                </MudButton>
+                <MudButton Href="/account/register"
+                           Color="Color.Secondary"
+                           Variant="Variant.Outlined">
+                    Use Registration Code
+                </MudButton>
+            </MudStack>
+        </MudCardActions>
+            
+    </MudCard>
+    </EditForm>
+</MudContainer>
+@code {
+    private string? errorMessage;
+    private bool isLoading;
+
+    [SupplyParameterFromForm]
+    private LoginRequest Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if user is already authenticated
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo(ReturnUrl ?? "/");
+        }
+    }
+
+    public async Task LoginUser()
+    {
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await AuthStateProvider.LoginAsync(Input);
+            
+            if (result is {Success: true})
+            {                
+                Navigation.NavigateTo(ReturnUrl ?? "/");
+            }
+            else
+            {
+                errorMessage = $"Login could not be completed: {LoginFailureReasonDisplay.GetById((int)result.FailureReason)?.DisplayName}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred during login. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}
