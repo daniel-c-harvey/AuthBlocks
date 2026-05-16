@@ -12,8 +12,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GenBlocks\GenBlocks.csproj" OutputItemType="Analyzer"/>
-    <PackageReference Include="Cerebellum.NetBlocks" Version="10.2.0" />
-    <ProjectReference Include="../../NetBlocks/Models.Shared/Models.Shared.csproj" />
+    <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.0" />
+    <PackageReference Include="Cerebellum.NetBlocks.Models" Version="10.3.0" />
   </ItemGroup>
 
 </Project>
