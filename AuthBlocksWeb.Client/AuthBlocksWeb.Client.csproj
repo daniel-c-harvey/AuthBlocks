@@ -8,7 +8,7 @@
 
     <PropertyGroup>
         <PackageId>Cerebellum.AuthBlocks.Web.Client</PackageId>
-        <Version>10.3.12</Version>
+        <Version>10.3.13</Version>
         <Authors>Daniel Harvey</Authors>
         <Company>Cerebellum Softworks</Company>
         <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
@@ -17,12 +17,19 @@
         <RepositoryType>git</RepositoryType>
         <Description>Blazor WebAssembly client-side authentication components for the AuthBlocks ecosystem. Provides WASM-hosted auth UI building blocks designed to pair with Cerebellum.AuthBlocks server-side authentication and authorization.</Description>
         <PackageTags>authentication;authorization;blazor;wasm;webassembly;cerebellum;authblocks;dotnet</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>csw-brain-4-favicon.png</PackageIcon>
         <RepositoryBranch>master</RepositoryBranch>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="../README.md" Pack="true" PackagePath="\" />
+        <None Include="../csw-brain-4-favicon.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
 
     <ItemGroup>
         <SupportedPlatform Include="browser" />
