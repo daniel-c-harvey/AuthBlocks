@@ -26,11 +26,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cerebellum.NetBlocks" Version="10.2.0" />
+    <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.0" />
+    <PackageReference Include="Cerebellum.NetBlocks.Models" Version="10.3.0" />
+    <PackageReference Include="Cerebellum.BlazorBlocks.Api" Version="1.0.0" />
     <ProjectReference Include="..\AuthBlocksModels\AuthBlocksModels.csproj" />
     <ProjectReference Include="..\AuthBlocksData\AuthBlocksData.csproj" />
-    <ProjectReference Include="../../BlazorBlocks/API.Shared/API.Shared.csproj" />
-    <ProjectReference Include="../../NetBlocks/Models.Shared/Models.Shared.csproj" />
   </ItemGroup>
 
 </Project>
