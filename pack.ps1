@@ -20,8 +20,10 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksLib.csproj (e
 
 # Push
 Write-Host "Pushing to nuget.org..."
-dotnet nuget push "nupkgs/*.nupkg" --api-key $ApiKey --source https://api.nuget.org/v3/index.json
-if ($LASTEXITCODE -ne 0) { throw "dotnet nuget push failed (exit code $LASTEXITCODE)" }
+Get-ChildItem ./nupkgs/*.nupkg | ForEach-Object {
+    dotnet nuget push $_.FullName --api-key $ApiKey --source https://api.nuget.org/v3/index.json
+    if ($LASTEXITCODE -ne 0) { throw "dotnet nuget push failed for $($_.Name) (exit code $LASTEXITCODE)" }
+}
 
 $csproj = [xml](Get-Content 'AuthBlocksLib/AuthBlocksLib.csproj')
 $Version = $csproj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -ExpandProperty Version
