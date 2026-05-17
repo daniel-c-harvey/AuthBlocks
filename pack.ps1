@@ -18,6 +18,8 @@ dotnet pack AuthBlocksLib/AuthBlocksLib.csproj -c Release -o ./nupkgs
 
 # Push
 Write-Host "Pushing to nuget.org..."
-dotnet nuget push "nupkgs/*.nupkg" --api-key $ApiKey --source https://api.nuget.org/v3/index.json --skip-duplicate
+dotnet nuget push "nupkgs/*.nupkg" --api-key $ApiKey --source https://api.nuget.org/v3/index.json
 
-Write-Host "Done. Cerebellum.AuthBlocks 1.0.0 published successfully."
+$csproj = [xml](Get-Content 'AuthBlocksLib/AuthBlocksLib.csproj')
+$Version = $csproj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -ExpandProperty Version
+Write-Host "Done. Cerebellum.AuthBlocks $Version published successfully."
