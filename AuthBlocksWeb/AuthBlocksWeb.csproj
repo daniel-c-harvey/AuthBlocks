@@ -6,6 +6,23 @@
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <PackageId>Cerebellum.AuthBlocks.Web</PackageId>
+        <Version>10.3.1</Version>
+        <Authors>Daniel Harvey</Authors>
+        <Company>Cerebellum Softworks</Company>
+        <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/daniel-c-harvey/AuthBlocks</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/daniel-c-harvey/AuthBlocks.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <Description>Blazor server-side authentication components for the AuthBlocks ecosystem. Provides MudBlazor-based auth UI, JWT bearer integration, and authorization plumbing designed to pair with Cerebellum.AuthBlocks identity and role services.</Description>
+        <PackageTags>authentication;authorization;blazor;mudblazor;jwt;cerebellum;authblocks;dotnet</PackageTags>
+        <RepositoryBranch>master</RepositoryBranch>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    </PropertyGroup>
 
     <ItemGroup>
         <SupportedPlatform Include="browser" />
@@ -19,6 +36,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.7" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.7" />
         <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.7" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
         <PackageReference Include="MudBlazor" Version="8.9.0" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.1" />
     </ItemGroup>
@@ -27,7 +45,7 @@
       <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.0" />
       <PackageReference Include="Cerebellum.BlazorBlocks.Web" Version="10.3.1" />
       <ProjectReference Include="..\AuthBlocksWeb.Client\AuthBlocksWeb.Client.csproj" />
-      <ProjectReference Include="..\AuthBlocksModels\AuthBlocksModels.csproj" />
+      <ProjectReference Include="..\AuthBlocksLib\AuthBlocksLib.csproj" />
     </ItemGroup>
 
     <ItemGroup>
