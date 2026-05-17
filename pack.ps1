@@ -1,3 +1,4 @@
+#Requires -Version 5.1
 param(
     [Parameter(Mandatory)]
     [string]$ApiKey
@@ -15,10 +16,12 @@ New-Item ./nupkgs -ItemType Directory | Out-Null
 # Pack
 Write-Host "Packing AuthBlocksLib..."
 dotnet pack AuthBlocksLib/AuthBlocksLib.csproj -c Release -o ./nupkgs
+if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksLib.csproj (exit code $LASTEXITCODE)" }
 
 # Push
 Write-Host "Pushing to nuget.org..."
 dotnet nuget push "nupkgs/*.nupkg" --api-key $ApiKey --source https://api.nuget.org/v3/index.json
+if ($LASTEXITCODE -ne 0) { throw "dotnet nuget push failed (exit code $LASTEXITCODE)" }
 
 $csproj = [xml](Get-Content 'AuthBlocksLib/AuthBlocksLib.csproj')
 $Version = $csproj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -ExpandProperty Version
