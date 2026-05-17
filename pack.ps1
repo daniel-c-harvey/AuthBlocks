@@ -18,6 +18,14 @@ Write-Host "Packing AuthBlocksLib..."
 dotnet pack AuthBlocksLib/AuthBlocksLib.csproj -c Release -o ./nupkgs
 if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksLib.csproj (exit code $LASTEXITCODE)" }
 
+Write-Host "Packing AuthBlocksWeb.Client..."
+dotnet pack AuthBlocksWeb.Client/AuthBlocksWeb.Client.csproj -c Release -o ./nupkgs
+if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksWeb.Client.csproj (exit code $LASTEXITCODE)" }
+
+Write-Host "Packing AuthBlocksWeb..."
+dotnet pack AuthBlocksWeb/AuthBlocksWeb.csproj -c Release -o ./nupkgs
+if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksWeb.csproj (exit code $LASTEXITCODE)" }
+
 # Push
 Write-Host "Pushing to nuget.org..."
 Get-ChildItem ./nupkgs/*.nupkg | ForEach-Object {
@@ -27,4 +35,4 @@ Get-ChildItem ./nupkgs/*.nupkg | ForEach-Object {
 
 $csproj = [xml](Get-Content 'AuthBlocksLib/AuthBlocksLib.csproj')
 $Version = $csproj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -ExpandProperty Version
-Write-Host "Done. Cerebellum.AuthBlocks $Version published successfully."
+Write-Host "Done. Cerebellum.AuthBlocks, Cerebellum.AuthBlocksWeb.Client, and Cerebellum.AuthBlocksWeb $Version published successfully."
