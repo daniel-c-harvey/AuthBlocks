@@ -19,7 +19,7 @@
     <PackageTags>authentication;authorization;identity;aspnet;blazor;jwt;hierarchical-roles;cerebellum;blazorblocks;dotnet</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>csw-brain-4-favicon.png</PackageIcon>
-    <RepositoryBranch>main</RepositoryBranch>
+    <RepositoryBranch>master</RepositoryBranch>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
