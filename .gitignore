@@ -7,3 +7,4 @@ obj/
 **/environment/admin.json
 **/environment/jwt_settings.json
 **/environment/email_connections.json
+.claude/worktrees/
