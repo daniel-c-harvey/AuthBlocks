@@ -44,12 +44,8 @@
     <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.0" />
     <PackageReference Include="Cerebellum.NetBlocks.Models" Version="10.3.0" />
     <PackageReference Include="Cerebellum.BlazorBlocks.Api" Version="10.3.1" />
-    <ProjectReference Include="..\AuthBlocksModels\AuthBlocksModels.csproj">
-      <PrivateAssets>all</PrivateAssets>
-    </ProjectReference>
-    <ProjectReference Include="..\AuthBlocksData\AuthBlocksData.csproj">
-      <PrivateAssets>all</PrivateAssets>
-    </ProjectReference>
+    <ProjectReference Include="..\AuthBlocksModels\AuthBlocksModels.csproj" />
+    <ProjectReference Include="..\AuthBlocksData\AuthBlocksData.csproj" />
   </ItemGroup>
 
 </Project>

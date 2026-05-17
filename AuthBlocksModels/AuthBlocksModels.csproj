@@ -1,14 +1,39 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Cerebellum.AuthBlocks.Models</PackageId>
+    <Version>10.3.15</Version>
+    <Authors>Daniel Harvey</Authors>
+    <Company>Cerebellum Softworks</Company>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/daniel-c-harvey/AuthBlocks</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/daniel-c-harvey/AuthBlocks.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Description>Domain models for the Cerebellum AuthBlocks authentication and authorization library: user, role, and hierarchical role entities, registration tokens, and supporting DTOs built on ASP.NET Core Identity for .NET 10.</Description>
+    <PackageTags>authentication;authorization;identity;models;cerebellum;authblocks;dotnet</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>csw-brain-4-favicon.png</PackageIcon>
+    <RepositoryBranch>master</RepositoryBranch>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="\" />
+    <None Include="../csw-brain-4-favicon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="10.0.7" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
