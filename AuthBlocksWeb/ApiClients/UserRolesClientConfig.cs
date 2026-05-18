@@ -1,4 +1,4 @@
-using Web.Shared.ApiClients;
+using Web.ApiClients;
 
 namespace AuthBlocksWeb.ApiClients;
 
