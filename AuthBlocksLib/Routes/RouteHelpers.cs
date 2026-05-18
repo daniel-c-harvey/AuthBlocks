@@ -2,9 +2,9 @@ using System.Linq.Expressions;
 using System.Security.Claims;
 using Data.Managers;
 using Microsoft.AspNetCore.Http;
-using Models.Shared.Common;
-using Models.Shared.Entities;
-using Models.Shared.Models;
+using Models.Common;
+using Models.Entities;
+using Models.Models;
 using NetBlocks.Models;
 
 namespace AuthBlocksLib.Routes;

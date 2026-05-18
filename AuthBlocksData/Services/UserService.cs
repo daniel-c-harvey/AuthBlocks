@@ -8,7 +8,7 @@ using AuthBlocksData.Data.Repositories;
 using AuthBlocksModels.Converters;
 using AuthBlocksModels.Models;
 using Data.Managers;
-using Models.Shared.Common;
+using Models.Common;
 using NetBlocks.Models;
 using NetBlocks.Utilities;
 

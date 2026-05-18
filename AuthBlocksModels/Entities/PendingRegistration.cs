@@ -1,6 +1,6 @@
 ﻿using AuthBlocksModels.Entities.Identity;
-using Models.Shared.Entities;
-using Models.Shared.Models;
+using Models.Entities;
+using Models.Models;
 
 namespace AuthBlocksModels.Entities;
 

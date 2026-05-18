@@ -1,7 +1,7 @@
 using AuthBlocksModels.ApiModels;
 using AuthBlocksModels.Models;
 using AuthBlocksWeb.ApiClients;
-using Models.Shared.Common;
+using Models.Common;
 using NetBlocks.Models;
 
 namespace AuthBlocksWeb.Components.Pages.UserAdmin.Permissions;

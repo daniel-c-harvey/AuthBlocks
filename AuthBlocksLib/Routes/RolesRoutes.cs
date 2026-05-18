@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Models.Shared.Common;
+using Models.Common;
 using NetBlocks.Models;
 
 namespace AuthBlocksLib.Routes;
