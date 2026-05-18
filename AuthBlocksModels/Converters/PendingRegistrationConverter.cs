@@ -1,8 +1,8 @@
 ﻿using AuthBlocksModels.Entities;
 using AuthBlocksModels.InputModels;
 using AuthBlocksModels.Models;
-using Models.Shared.Converters;
-using Models.Shared.Models;
+using Models.Converters;
+using Models.Models;
 
 namespace AuthBlocksModels.Converters;
 

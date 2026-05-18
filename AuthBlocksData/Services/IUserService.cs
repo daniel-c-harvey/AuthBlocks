@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 using AuthBlocksModels.Entities.Identity;
 using AuthBlocksModels.Models;
 using Data.Managers;
-using Models.Shared.Common;
+using Models.Common;
 using NetBlocks.Models;
 
 namespace AuthBlocksData.Services;

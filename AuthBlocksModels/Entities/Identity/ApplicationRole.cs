@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Models.Shared.Entities;
+using Models.Entities;
 
 namespace AuthBlocksModels.Entities.Identity;
 
