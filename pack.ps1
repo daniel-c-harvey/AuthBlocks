@@ -1,8 +1,11 @@
 #Requires -Version 5.1
 param(
-    [Parameter(Mandatory)]
     [string]$ApiKey
 )
+
+if (-not $ApiKey) {
+    $ApiKey = Read-Host "NuGet API key"
+}
 
 $ErrorActionPreference = 'Stop'
 
@@ -14,6 +17,14 @@ if (Test-Path ./nupkgs) {
 New-Item ./nupkgs -ItemType Directory | Out-Null
 
 # Pack
+Write-Host "Packing AuthBlocksModels..."
+dotnet pack AuthBlocksModels/AuthBlocksModels.csproj -c Release -o ./nupkgs
+if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksModels.csproj (exit code $LASTEXITCODE)" }
+
+Write-Host "Packing AuthBlocksData..."
+dotnet pack AuthBlocksData/AuthBlocksData.csproj -c Release -o ./nupkgs
+if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksData.csproj (exit code $LASTEXITCODE)" }
+
 Write-Host "Packing AuthBlocksLib..."
 dotnet pack AuthBlocksLib/AuthBlocksLib.csproj -c Release -o ./nupkgs
 if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksLib.csproj (exit code $LASTEXITCODE)" }
@@ -29,10 +40,10 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksWeb.csproj (e
 # Push
 Write-Host "Pushing to nuget.org..."
 Get-ChildItem ./nupkgs/*.nupkg | ForEach-Object {
-    dotnet nuget push $_.FullName --api-key $ApiKey --source https://api.nuget.org/v3/index.json
+    dotnet nuget push $_.FullName --api-key $ApiKey --source https://api.nuget.org/v3/index.json --skip-duplicate
     if ($LASTEXITCODE -ne 0) { throw "dotnet nuget push failed for $($_.Name) (exit code $LASTEXITCODE)" }
 }
 
 $csproj = [xml](Get-Content 'AuthBlocksLib/AuthBlocksLib.csproj')
 $Version = $csproj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -ExpandProperty Version
-Write-Host "Done. Cerebellum.AuthBlocks, Cerebellum.AuthBlocksWeb.Client, and Cerebellum.AuthBlocksWeb $Version published successfully."
+Write-Host "Done. Cerebellum.AuthBlocks.Models, Cerebellum.AuthBlocks.Data, Cerebellum.AuthBlocks, Cerebellum.AuthBlocks.Web.Client, and Cerebellum.AuthBlocks.Web $Version published successfully."

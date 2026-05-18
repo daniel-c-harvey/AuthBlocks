@@ -1,5 +1,5 @@
 ﻿using AuthBlocksModels.Entities;
-using Data.Shared.Data.Repositories;
+using Data.Data.Repositories;
 
 namespace AuthBlocksData.Data.Repositories;
 

@@ -1,5 +1,5 @@
 using System.Text;
-using API.Shared.Common.Email.Mailtrap;
+using API.Common.Email.Mailtrap;
 using AuthBlocksData;
 using AuthBlocksLib.HierarchicalAuthorize;
 using AuthBlocksLib.Models;

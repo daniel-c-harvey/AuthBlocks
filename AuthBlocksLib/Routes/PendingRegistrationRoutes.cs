@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using API.Shared.Common.Email.Mailtrap;
+using API.Common.Email.Mailtrap;
 using AuthBlocksData.Services;
 using AuthBlocksLib.Common;
 using AuthBlocksLib.Services;
@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
-using Models.Shared.Common;
+using Models.Common;
 using NetBlocks.Models;
 
 namespace AuthBlocksLib.Routes;

@@ -1,4 +1,4 @@
-﻿using Models.Shared.Models;
+﻿using Models.Models;
 
 namespace AuthBlocksModels.Models;
 

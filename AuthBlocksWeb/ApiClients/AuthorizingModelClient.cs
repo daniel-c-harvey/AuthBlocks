@@ -2,10 +2,10 @@
 using AuthBlocksModels.Models;
 using AuthBlocksWeb.Services;
 using Microsoft.Extensions.Options;
-using Models.Shared.Common;
-using Models.Shared.Models;
+using Models.Common;
+using Models.Models;
 using NetBlocks.Models;
-using Web.Shared.ApiClients;
+using Web.ApiClients;
 
 namespace AuthBlocksWeb.ApiClients;
 

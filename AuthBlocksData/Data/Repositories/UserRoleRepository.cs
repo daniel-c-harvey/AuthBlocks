@@ -1,5 +1,5 @@
 ﻿using AuthBlocksModels.Entities.Identity;
-using Data.Shared.Data.Repositories;
+using Data.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

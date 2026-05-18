@@ -1,10 +1,10 @@
 ﻿using System.Linq.Expressions;
 using AuthBlocksModels.Entities;
 using AuthBlocksModels.Entities.Identity;
-using Data.Shared.Data.Repositories;
+using Data.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Models.Shared.Common;
+using Models.Common;
 
 namespace AuthBlocksData.Data.Repositories;
 

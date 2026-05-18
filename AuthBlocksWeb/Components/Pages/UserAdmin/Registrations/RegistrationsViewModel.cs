@@ -2,7 +2,7 @@
 using AuthBlocksModels.InputModels;
 using AuthBlocksModels.Models;
 using AuthBlocksWeb.ApiClients;
-using Web.Shared.Maintenance.Entities;
+using Web.Maintenance.Entities;
 
 namespace AuthBlocksWeb.Components.Pages.UserAdmin.Registrations;
 

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using AuthBlocksModels.Entities.Identity;
-using Data.Shared.Data.Configurations;
+using Data.Data.Configurations;
 
 namespace AuthBlocksData.Data.Configurations;
 

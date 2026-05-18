@@ -1,5 +1,5 @@
 ﻿using AuthBlocksModels.Entities;
-using Data.Shared.Data.Configurations;
+using Data.Data.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

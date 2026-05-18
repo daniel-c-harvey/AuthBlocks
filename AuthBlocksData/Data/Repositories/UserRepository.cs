@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using AuthBlocksModels.Entities.Identity;
-using Data.Shared.Data.Repositories;
+using Data.Data.Repositories;
 using Microsoft.Extensions.Logging;
 
 namespace AuthBlocksData.Data.Repositories;

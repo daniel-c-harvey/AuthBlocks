@@ -80,7 +80,7 @@ Role hierarchy is seeded automatically from `SystemRole` definitions on startup 
 | Package | Purpose |
 |---|---|
 | `Cerebellum.NetBlocks` | Result types, environment config helpers |
-| `Cerebellum.NetBlocks.Models` | Shared model primitives |
+| `Cerebellum.BlazorBlocks.Models` | Shared model primitives |
 | `Cerebellum.BlazorBlocks.Api` | Shared API contracts for the BlazorBlocks ecosystem |
 | `Microsoft.AspNetCore.Authentication.JwtBearer` | JWT Bearer middleware |
 

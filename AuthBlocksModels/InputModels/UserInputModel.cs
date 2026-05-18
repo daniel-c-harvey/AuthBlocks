@@ -1,4 +1,4 @@
-using Models.Shared.InputModels;
+using Models.InputModels;
 
 namespace AuthBlocksModels.InputModels;
 
