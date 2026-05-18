@@ -8,7 +8,7 @@
 
     <PropertyGroup>
         <PackageId>Cerebellum.AuthBlocks.Data</PackageId>
-        <Version>10.3.16</Version>
+        <Version>10.3.17</Version>
         <Authors>Daniel Harvey</Authors>
         <Company>Cerebellum Softworks</Company>
         <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
