@@ -8,7 +8,7 @@
 
     <PropertyGroup>
         <PackageId>Cerebellum.AuthBlocks.Data</PackageId>
-        <Version>10.3.3</Version>
+        <Version>10.3.30</Version>
         <Authors>Daniel Harvey</Authors>
         <Company>Cerebellum Softworks</Company>
         <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
@@ -51,8 +51,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.3" />
-      <PackageReference Include="Cerebellum.BlazorBlocks.Data" Version="10.3.3" />
+      <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.30" />
+      <PackageReference Include="Cerebellum.BlazorBlocks.Data" Version="10.3.30" />
       <ProjectReference Include="..\AuthBlocksModels\AuthBlocksModels.csproj" />
     </ItemGroup>
 
