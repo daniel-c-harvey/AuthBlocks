@@ -46,4 +46,4 @@ Get-ChildItem ./nupkgs/*.nupkg | ForEach-Object {
 
 $csproj = [xml](Get-Content 'AuthBlocksLib/AuthBlocksLib.csproj')
 $Version = $csproj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -ExpandProperty Version
-Write-Host "Done. Cerebellum.AuthBlocks.Models, Cerebellum.AuthBlocks.Data, Cerebellum.AuthBlocks, Cerebellum.AuthBlocksWeb.Client, and Cerebellum.AuthBlocksWeb $Version published successfully."
+Write-Host "Done. Cerebellum.AuthBlocks.Models, Cerebellum.AuthBlocks.Data, Cerebellum.AuthBlocks, Cerebellum.AuthBlocks.Web.Client, and Cerebellum.AuthBlocks.Web $Version published successfully."
