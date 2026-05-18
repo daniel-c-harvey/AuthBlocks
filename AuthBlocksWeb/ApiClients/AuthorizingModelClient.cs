@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using Models.Shared.Common;
 using Models.Shared.Models;
 using NetBlocks.Models;
-using Web.Shared.ApiClients;
+using Web.ApiClients;
 
 namespace AuthBlocksWeb.ApiClients;
 

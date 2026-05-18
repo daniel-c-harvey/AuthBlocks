@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using AuthBlocksModels.Entities.Identity;
 using AuthBlocksModels.Models;
-using Data.Shared.Managers;
+using Data.Managers;
 using Models.Shared.Common;
 using NetBlocks.Models;
 

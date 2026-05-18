@@ -1,6 +1,6 @@
 using AuthBlocksModels.ApiModels;
 using AuthBlocksModels.Models;
-using Web.Shared.ApiClients;
+using Web.ApiClients;
 
 namespace AuthBlocksWeb.ApiClients;
 

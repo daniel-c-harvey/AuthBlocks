@@ -2,7 +2,7 @@
 using AuthBlocksModels.Converters;
 using AuthBlocksModels.Entities;
 using AuthBlocksModels.Models;
-using Data.Shared.Managers;
+using Data.Managers;
 using Microsoft.Extensions.Logging;
 using NetBlocks.Models;
 

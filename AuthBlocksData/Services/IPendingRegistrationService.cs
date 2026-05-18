@@ -1,6 +1,6 @@
 ﻿using AuthBlocksModels.Entities;
 using AuthBlocksModels.Models;
-using Data.Shared.Managers;
+using Data.Managers;
 using NetBlocks.Models;
 
 namespace AuthBlocksData.Services;

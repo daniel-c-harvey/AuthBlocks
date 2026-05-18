@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 using System.Security.Claims;
-using Data.Shared.Managers;
+using Data.Managers;
 using Microsoft.AspNetCore.Http;
 using Models.Shared.Common;
 using Models.Shared.Entities;
@@ -11,7 +11,7 @@ namespace AuthBlocksLib.Routes;
 
 /// <summary>
 /// Shared helpers used by the AuthBlocks Minimal API route groups.
-/// These mirror the behaviour of <c>API.Shared.Controllers.ModelController{TEntity,TModel,TManager}</c>
+/// These mirror the behaviour of <c>API.Controllers.ModelController{TEntity,TModel,TManager}</c>
 /// so the route surface preserves the exact pattern callers already use.
 /// </summary>
 internal static class RouteHelpers

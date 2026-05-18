@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using API.Shared.Common.Email.Mailtrap;
+using API.Common.Email.Mailtrap;
 using AuthBlocksData.Services;
 using AuthBlocksLib.Common;
 using AuthBlocksLib.Services;
