@@ -127,6 +127,20 @@ internal static class PendingRegistrationRoutes
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to send registration email for {Email}", email);
+
+                try
+                {
+                    var lookupResult = await service.FindByEmail(email);
+                    if (lookupResult is { Success: true, Value: PendingRegistrationModel created })
+                    {
+                        await service.Delete(created.Id);
+                    }
+                }
+                catch (Exception deleteEx)
+                {
+                    logger.LogWarning(deleteEx, "Failed to delete orphaned pending registration record for {Email} after email send failure", email);
+                }
+
                 var failure = RegistrationCreatedResult.CreateFailResult("Failed to send registration email. Please try again or contact support.");
                 return Results.Json(new RegistrationCreatedResult.RegistrationCreatedResultDto(failure), statusCode: StatusCodes.Status500InternalServerError);
             }
