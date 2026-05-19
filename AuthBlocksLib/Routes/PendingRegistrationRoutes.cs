@@ -102,15 +102,14 @@ internal static class PendingRegistrationRoutes
                 Roles = model.Roles
             };
 
-            try
+            var createResult = await service.Create(hash, pendingRegistration);
+            if (!createResult.Success)
             {
-                await service.Create(hash, pendingRegistration);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to create pending registration record for {Email}", email);
+                logger.LogError("Failed to create pending registration record for {Email}: {Reasons}",
+                    email, createResult.GetMessage());
                 var failure = RegistrationCreatedResult.CreateFailResult("Registration could not be completed. Please try again or contact support.");
-                return Results.Json(new RegistrationCreatedResult.RegistrationCreatedResultDto(failure), statusCode: StatusCodes.Status500InternalServerError);
+                return Results.Json(new RegistrationCreatedResult.RegistrationCreatedResultDto(failure),
+                    statusCode: StatusCodes.Status500InternalServerError);
             }
 
             try
@@ -133,7 +132,12 @@ internal static class PendingRegistrationRoutes
                     var lookupResult = await service.FindByEmail(email);
                     if (lookupResult is { Success: true, Value: PendingRegistrationModel created })
                     {
-                        await service.Delete(created.Id);
+                        var deleteResult = await service.Delete(created.Id);
+                        if (!deleteResult.Success)
+                        {
+                            logger.LogWarning("Failed to delete orphaned pending registration record for {Email}: {Reasons}",
+                                email, deleteResult.GetMessage());
+                        }
                     }
                 }
                 catch (Exception deleteEx)
@@ -144,6 +148,10 @@ internal static class PendingRegistrationRoutes
                 var failure = RegistrationCreatedResult.CreateFailResult("Failed to send registration email. Please try again or contact support.");
                 return Results.Json(new RegistrationCreatedResult.RegistrationCreatedResultDto(failure), statusCode: StatusCodes.Status500InternalServerError);
             }
+        }
+        else
+        {
+            logger.LogError("Failed to generate registration token for {Email}", model.Email);
         }
 
         var result = RegistrationCreatedResult.From(tokenResult, tokenResult.RegistrationEmail);
