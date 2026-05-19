@@ -152,14 +152,15 @@ internal static class PendingRegistrationRoutes
         else
         {
             logger.LogError("Failed to generate registration token for {Email}", model.Email);
+            var failure = RegistrationCreatedResult.CreateFailResult("Registration could not be completed. Please try again or contact support.");
+            return Results.Json(new RegistrationCreatedResult.RegistrationCreatedResultDto(failure),
+                statusCode: StatusCodes.Status500InternalServerError);
         }
 
         var result = RegistrationCreatedResult.From(tokenResult, tokenResult.RegistrationEmail);
         var resultDto = new RegistrationCreatedResult.RegistrationCreatedResultDto(result);
 
-        return tokenResult.Success
-            ? Results.Ok(resultDto)
-            : Results.Json(resultDto, statusCode: StatusCodes.Status500InternalServerError);
+        return Results.Ok(resultDto);
     }
 
     /// <summary>Type tag used purely so ILogger&lt;T&gt; gives a clean category name for AuthBlocks pending registration routes.</summary>
