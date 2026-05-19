@@ -102,7 +102,7 @@
                 errorMessage = $"Login could not be completed: {LoginFailureReasonDisplay.GetById((int)result.FailureReason)?.DisplayName}";
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             errorMessage = "An error occurred during login. Please try again.";
         }
