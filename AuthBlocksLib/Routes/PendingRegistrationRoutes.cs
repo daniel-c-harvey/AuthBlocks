@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Logging;
 using Models.Common;
 using NetBlocks.Models;
 
@@ -64,7 +65,8 @@ internal static class PendingRegistrationRoutes
         IPendingRegistrationService service,
         IUserService userService,
         IGeneralEmailSender emailSender,
-        AuthBlocksOptions options)
+        AuthBlocksOptions options,
+        ILogger<PendingRegistrationLogger> logger)
     {
         var existingUser = await userService.FindByEmailAsync(model.Email);
         if (existingUser != null)
@@ -100,23 +102,67 @@ internal static class PendingRegistrationRoutes
                 Roles = model.Roles
             };
 
-            await service.Create(hash, pendingRegistration);
-
-            var subject = $"[{options.ApplicationName}] Register New Account";
-            var link = QueryHelpers.AddQueryString(model.ReturnHost, new Dictionary<string, string?>
+            var createResult = await service.Create(hash, pendingRegistration);
+            if (!createResult.Success)
             {
-                ["UserEmail"] = email,
-                ["RegistrationToken"] = token
-            });
-            var message = RegistrationEmailTemplate.Create(token, link, options.ApplicationName, options.SupportEmail);
-            await emailSender.SendEmailAsync(email, null, subject, message);
+                logger.LogError("Failed to create pending registration record for {Email}: {Reasons}",
+                    email, createResult.GetMessage());
+                var failure = RegistrationCreatedResult.CreateFailResult("Registration could not be completed. Please try again or contact support.");
+                return Results.Json(new RegistrationCreatedResult.RegistrationCreatedResultDto(failure),
+                    statusCode: StatusCodes.Status500InternalServerError);
+            }
+
+            try
+            {
+                var subject = $"[{options.ApplicationName}] Register New Account";
+                var link = QueryHelpers.AddQueryString(model.ReturnHost, new Dictionary<string, string?>
+                {
+                    ["UserEmail"] = email,
+                    ["RegistrationToken"] = token
+                });
+                var message = RegistrationEmailTemplate.Create(token, link, options.ApplicationName, options.SupportEmail);
+                await emailSender.SendEmailAsync(email, null, subject, message);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to send registration email for {Email}", email);
+
+                try
+                {
+                    var lookupResult = await service.FindByEmail(email);
+                    if (lookupResult is { Success: true, Value: PendingRegistrationModel created })
+                    {
+                        var deleteResult = await service.Delete(created.Id);
+                        if (!deleteResult.Success)
+                        {
+                            logger.LogWarning("Failed to delete orphaned pending registration record for {Email}: {Reasons}",
+                                email, deleteResult.GetMessage());
+                        }
+                    }
+                }
+                catch (Exception deleteEx)
+                {
+                    logger.LogWarning(deleteEx, "Failed to delete orphaned pending registration record for {Email} after email send failure", email);
+                }
+
+                var failure = RegistrationCreatedResult.CreateFailResult("Failed to send registration email. Please try again or contact support.");
+                return Results.Json(new RegistrationCreatedResult.RegistrationCreatedResultDto(failure), statusCode: StatusCodes.Status500InternalServerError);
+            }
+        }
+        else
+        {
+            logger.LogError("Failed to generate registration token for {Email}", model.Email);
+            var failure = RegistrationCreatedResult.CreateFailResult("Registration could not be completed. Please try again or contact support.");
+            return Results.Json(new RegistrationCreatedResult.RegistrationCreatedResultDto(failure),
+                statusCode: StatusCodes.Status500InternalServerError);
         }
 
         var result = RegistrationCreatedResult.From(tokenResult, tokenResult.RegistrationEmail);
         var resultDto = new RegistrationCreatedResult.RegistrationCreatedResultDto(result);
 
-        return tokenResult.Success
-            ? Results.Ok(resultDto)
-            : Results.Json(resultDto, statusCode: StatusCodes.Status500InternalServerError);
+        return Results.Ok(resultDto);
     }
+
+    /// <summary>Type tag used purely so ILogger&lt;T&gt; gives a clean category name for AuthBlocks pending registration routes.</summary>
+    internal sealed class PendingRegistrationLogger { }
 }

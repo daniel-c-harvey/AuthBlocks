@@ -33,9 +33,9 @@ public class PendingRegistrationClient : AuthorizingModelClient<PendingRegistrat
 
             return result.From();
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            return RegistrationCreatedResult.CreateFailResult(e.Message);
+            return RegistrationCreatedResult.CreateFailResult("Registration could not be completed. Please try again or contact support.");
         }
         finally
         {
