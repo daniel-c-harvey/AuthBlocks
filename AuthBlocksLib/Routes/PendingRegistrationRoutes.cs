@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Logging;
 using Models.Common;
 using NetBlocks.Models;
 
@@ -64,7 +65,8 @@ internal static class PendingRegistrationRoutes
         IPendingRegistrationService service,
         IUserService userService,
         IGeneralEmailSender emailSender,
-        AuthBlocksOptions options)
+        AuthBlocksOptions options,
+        ILogger<PendingRegistrationLogger> logger)
     {
         var existingUser = await userService.FindByEmailAsync(model.Email);
         if (existingUser != null)
@@ -100,16 +102,25 @@ internal static class PendingRegistrationRoutes
                 Roles = model.Roles
             };
 
-            await service.Create(hash, pendingRegistration);
-
-            var subject = $"[{options.ApplicationName}] Register New Account";
-            var link = QueryHelpers.AddQueryString(model.ReturnHost, new Dictionary<string, string?>
+            try
             {
-                ["UserEmail"] = email,
-                ["RegistrationToken"] = token
-            });
-            var message = RegistrationEmailTemplate.Create(token, link, options.ApplicationName, options.SupportEmail);
-            await emailSender.SendEmailAsync(email, null, subject, message);
+                await service.Create(hash, pendingRegistration);
+
+                var subject = $"[{options.ApplicationName}] Register New Account";
+                var link = QueryHelpers.AddQueryString(model.ReturnHost, new Dictionary<string, string?>
+                {
+                    ["UserEmail"] = email,
+                    ["RegistrationToken"] = token
+                });
+                var message = RegistrationEmailTemplate.Create(token, link, options.ApplicationName, options.SupportEmail);
+                await emailSender.SendEmailAsync(email, null, subject, message);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to create pending registration or send registration email for {Email}", email);
+                var failure = RegistrationCreatedResult.CreateFailResult("Failed to send registration email. Please try again or contact support.");
+                return Results.Json(new RegistrationCreatedResult.RegistrationCreatedResultDto(failure), statusCode: StatusCodes.Status500InternalServerError);
+            }
         }
 
         var result = RegistrationCreatedResult.From(tokenResult, tokenResult.RegistrationEmail);
@@ -119,4 +130,7 @@ internal static class PendingRegistrationRoutes
             ? Results.Ok(resultDto)
             : Results.Json(resultDto, statusCode: StatusCodes.Status500InternalServerError);
     }
+
+    /// <summary>Type tag used purely so ILogger&lt;T&gt; gives a clean category name for AuthBlocks pending registration routes.</summary>
+    internal sealed class PendingRegistrationLogger { }
 }
