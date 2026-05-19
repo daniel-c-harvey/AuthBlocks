@@ -105,7 +105,16 @@ internal static class PendingRegistrationRoutes
             try
             {
                 await service.Create(hash, pendingRegistration);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to create pending registration record for {Email}", email);
+                var failure = RegistrationCreatedResult.CreateFailResult("Registration could not be completed. Please try again or contact support.");
+                return Results.Json(new RegistrationCreatedResult.RegistrationCreatedResultDto(failure), statusCode: StatusCodes.Status500InternalServerError);
+            }
 
+            try
+            {
                 var subject = $"[{options.ApplicationName}] Register New Account";
                 var link = QueryHelpers.AddQueryString(model.ReturnHost, new Dictionary<string, string?>
                 {
@@ -117,7 +126,7 @@ internal static class PendingRegistrationRoutes
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create pending registration or send registration email for {Email}", email);
+                logger.LogError(ex, "Failed to send registration email for {Email}", email);
                 var failure = RegistrationCreatedResult.CreateFailResult("Failed to send registration email. Please try again or contact support.");
                 return Results.Json(new RegistrationCreatedResult.RegistrationCreatedResultDto(failure), statusCode: StatusCodes.Status500InternalServerError);
             }
