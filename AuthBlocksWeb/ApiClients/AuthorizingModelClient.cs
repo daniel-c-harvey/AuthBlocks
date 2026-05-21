@@ -23,15 +23,18 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
 
     private readonly ITokenService _tokenService;
     private readonly IAuthApiClient _authApiClient;
+    private readonly ISessionExpiredAction _sessionExpiredAction;
 
     protected AuthorizingModelClient(
         TConfig config,
         IOptions<JsonSerializerOptions> options,
         ITokenService tokenService,
-        IAuthApiClient authApiClient) : base(config, options)
+        IAuthApiClient authApiClient,
+        ISessionExpiredAction sessionExpiredAction) : base(config, options)
     {
         _tokenService = tokenService;
         _authApiClient = authApiClient;
+        _sessionExpiredAction = sessionExpiredAction;
     }
 
     protected async Task<Result> AddAuthorizationHeader()
@@ -119,6 +122,7 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
         {
             if (await EnsureValidTokenAsync() is { Success: false } sessionError)
             {
+                await _sessionExpiredAction.HandleAsync();
                 return ApiResult<TResult>.From(sessionError);
             }
             if (await AddAuthorizationHeader() is { Success: false } headerError)
@@ -134,6 +138,7 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
                 // (revoked, key rotation, etc.). Refresh + retry once.
                 if (!await TryRefreshTokensAsync())
                 {
+                    await _sessionExpiredAction.HandleAsync();
                     return ApiResult<TResult>.CreateFailResult(SessionExpiredMessage);
                 }
                 if (await AddAuthorizationHeader() is { Success: false } retryHeaderError)
@@ -144,6 +149,7 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
                 response = await send();
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
                 {
+                    await _sessionExpiredAction.HandleAsync();
                     return ApiResult<TResult>.CreateFailResult(SessionExpiredMessage);
                 }
             }
@@ -172,6 +178,7 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
         {
             if (await EnsureValidTokenAsync() is { Success: false } sessionError)
             {
+                await _sessionExpiredAction.HandleAsync();
                 return ApiResult.From(sessionError);
             }
             if (await AddAuthorizationHeader() is { Success: false } headerError)
@@ -184,6 +191,7 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
             {
                 if (!await TryRefreshTokensAsync())
                 {
+                    await _sessionExpiredAction.HandleAsync();
                     return ApiResult.CreateFailResult(SessionExpiredMessage);
                 }
                 if (await AddAuthorizationHeader() is { Success: false } retryHeaderError)
@@ -194,6 +202,7 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
                 response = await send();
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
                 {
+                    await _sessionExpiredAction.HandleAsync();
                     return ApiResult.CreateFailResult(SessionExpiredMessage);
                 }
             }

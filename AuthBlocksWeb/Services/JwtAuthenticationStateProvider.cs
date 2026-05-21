@@ -9,7 +9,7 @@ using NetBlocks.Models;
 
 namespace AuthBlocksWeb.Services;
 
-public class JwtAuthenticationStateProvider : AuthenticationStateProvider
+public class JwtAuthenticationStateProvider : AuthenticationStateProvider, ISessionExpiredAction
 {
     private readonly ITokenService _tokenService;
     private readonly IAuthApiClient _authApiClient;
@@ -158,6 +158,13 @@ public class JwtAuthenticationStateProvider : AuthenticationStateProvider
             var authState = await GetAuthenticationStateAsync();
             NotifyAuthenticationStateChanged(Task.FromResult(authState));
         }
+    }
+
+    public async Task HandleAsync()
+    {
+        await _tokenService.ClearTokensAsync();
+        NotifyAuthenticationStateChanged(Task.FromResult(
+            new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()))));
     }
 
     private async Task<(bool success, string newToken)> TryRefreshTokenAsync()

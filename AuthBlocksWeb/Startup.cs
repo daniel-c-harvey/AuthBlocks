@@ -25,6 +25,7 @@ public static class Startup
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<JwtAuthenticationStateProvider>();
         services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<JwtAuthenticationStateProvider>());
+        services.AddScoped<ISessionExpiredAction>(sp => sp.GetRequiredService<JwtAuthenticationStateProvider>());
         
         services.AddSingleton(new AuthClientConfig(apiBaseUrl));
         services.AddScoped<IAuthApiClient, AuthApiClient>();
