@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Json;
+using System.Net.Http.Json;
 using System.Text.Json;
 using AuthBlocksModels.ApiModels;
 using AuthBlocksModels.Models;
@@ -10,10 +10,11 @@ namespace AuthBlocksWeb.ApiClients;
 
 public class PendingRegistrationClient : AuthorizingModelClient<PendingRegistrationModel, PendingRegistrationClientConfig>, IPendingRegistrationClient
 {
-    public PendingRegistrationClient(PendingRegistrationClientConfig config, 
-                                     IOptions<JsonSerializerOptions> options, 
-                                     ITokenService tokenService) 
-    : base(config, options, tokenService)
+    public PendingRegistrationClient(PendingRegistrationClientConfig config,
+                                     IOptions<JsonSerializerOptions> options,
+                                     ITokenService tokenService,
+                                     IAuthApiClient authApiClient)
+    : base(config, options, tokenService, authApiClient)
     {
     }
 

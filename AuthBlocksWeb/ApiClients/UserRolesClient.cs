@@ -12,8 +12,9 @@ public class UserRolesClient : AuthorizingModelClient<UserRoleModel, UserRolesCl
 {
     public UserRolesClient(UserRolesClientConfig config,
                            IOptions<JsonSerializerOptions> options,
-                           ITokenService tokenService)
-        : base(config, options, tokenService)
+                           ITokenService tokenService,
+                           IAuthApiClient authApiClient)
+        : base(config, options, tokenService, authApiClient)
     {
     }
 
