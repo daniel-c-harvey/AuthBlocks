@@ -111,7 +111,7 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
     /// can inspect the status code without depending on the base
     /// <see cref="ModelClient{TModel, TConfig}"/> swallowing exceptions.
     /// </summary>
-    private async Task<ApiResult<TResult>> SendWithAuth<TResult>(
+    protected async Task<ApiResult<TResult>> SendWithAuth<TResult>(
         Func<Task<HttpResponseMessage>> send,
         Func<HttpResponseMessage, Task<ApiResult<TResult>>> deserialize)
     {
@@ -164,7 +164,7 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
     /// Non-generic sibling of <see cref="SendWithAuth{TResult}"/> for
     /// endpoints that return a bare <see cref="ApiResult"/>.
     /// </summary>
-    private async Task<ApiResult> SendWithAuth(
+    protected async Task<ApiResult> SendWithAuth(
         Func<Task<HttpResponseMessage>> send,
         Func<HttpResponseMessage, Task<ApiResult>> deserialize)
     {
@@ -220,17 +220,19 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
             { nameof(query.Sort).ToLower(), query.Sort },
             { nameof(query.Desc).ToLower(), query.Desc.ToString() },
         };
-        return QueryHelpers.AddQueryString(basePath, queryMap);
+        var filteredQuery = queryMap.Where(kv => kv.Value != null)
+                                    .ToDictionary(kv => kv.Key, kv => kv.Value);
+        return QueryHelpers.AddQueryString(basePath, filteredQuery);
     }
 
-    private async Task<ApiResult<T>> DeserializeApiResult<T>(HttpResponseMessage response)
+    protected async Task<ApiResult<T>> DeserializeApiResult<T>(HttpResponseMessage response)
     {
         var dto = await response.Content.ReadFromJsonAsync<ApiResultDto<T>>(Options)
                   ?? throw new HttpRequestException("Failed to deserialize response");
         return dto.From();
     }
 
-    private async Task<ApiResult> DeserializeApiResult(HttpResponseMessage response)
+    protected async Task<ApiResult> DeserializeApiResult(HttpResponseMessage response)
     {
         var dto = await response.Content.ReadFromJsonAsync<ApiResultDto>(Options)
                   ?? throw new HttpRequestException("Failed to deserialize response");
@@ -258,11 +260,16 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
             () => http.GetAsync(BuildPagedQueryUri($"api/{config.ControllerName}/count", query)),
             DeserializeApiResult<ItemCount>);
 
+    // Note: the send delegate is called twice on the 401-retry path.
+    // This is safe here because ModelController.Post is an upsert keyed on model.Id.
+    // Subclass overrides of Update that add non-idempotent side effects must account for this.
+    // Note: LastUpdateOutcome (base class side-channel) is not populated — base.Update is bypassed intentionally.
     public override Task<ApiResult<TModel>> Update(TModel model)
         => SendWithAuth(
             () => http.PostAsJsonAsync($"api/{config.ControllerName}", model, Options),
             DeserializeApiResult<TModel>);
 
+    // Note: LastDeleteOutcome (base class side-channel) is not populated — base.Delete is bypassed intentionally.
     public override Task<ApiResult> Delete(TModel model)
         => SendWithAuth(
             () => http.DeleteAsync($"api/{config.ControllerName}/{model.Id}"),

@@ -18,88 +18,28 @@ public class UserRolesClient : AuthorizingModelClient<UserRoleModel, UserRolesCl
     {
     }
 
-    public async Task<ApiResult<List<RoleInfo>>> GetRolesForUser(long userId)
-    {
-        try
-        {
-            if (await AddAuthorizationHeader() is { Success: false } error)
+    public Task<ApiResult<List<RoleInfo>>> GetRolesForUser(long userId)
+        => SendWithAuth(
+            () => http.GetAsync($"api/{config.ControllerName}/user/{userId}"),
+            DeserializeApiResult<List<RoleInfo>>);
+
+    public Task<ApiResult> AddUserToRole(long userId, string roleName)
+        => SendWithAuth(
+            () => http.PostAsJsonAsync($"api/{config.ControllerName}/user/{userId}", new UserRoleRequest { RoleName = roleName }, Options),
+            DeserializeApiResult);
+
+    public Task<ApiResult> RemoveUserFromRole(long userId, string roleName)
+        => SendWithAuth(
+            () =>
             {
-                return ApiResult<List<RoleInfo>>.From(error);
-            }
-
-            var dtoResult = await http.GetFromJsonAsync<ApiResultDto<List<RoleInfo>>>(
-                                $"api/{config.ControllerName}/user/{userId}", Options)
-                            ?? throw new HttpRequestException("Failed to deserialize response");
-
-            return dtoResult.From();
-        }
-        catch (Exception e)
-        {
-            return ApiResult<List<RoleInfo>>.CreateFailResult(e.Message);
-        }
-        finally
-        {
-            ClearAuthorizationHeader();
-        }
-    }
-
-    public async Task<ApiResult> AddUserToRole(long userId, string roleName)
-    {
-        try
-        {
-            if (await AddAuthorizationHeader() is { Success: false } error)
-            {
-                return ApiResult.From(error);
-            }
-
-            var request = new UserRoleRequest { RoleName = roleName };
-            var response = await http.PostAsJsonAsync(
-                $"api/{config.ControllerName}/user/{userId}", request, Options);
-
-            var dtoResult = await response.Content.ReadFromJsonAsync<ApiResultDto>(Options)
-                            ?? throw new HttpRequestException("Failed to deserialize response");
-
-            return dtoResult.From();
-        }
-        catch (Exception e)
-        {
-            return ApiResult.CreateFailResult(e.Message);
-        }
-        finally
-        {
-            ClearAuthorizationHeader();
-        }
-    }
-
-    public async Task<ApiResult> RemoveUserFromRole(long userId, string roleName)
-    {
-        try
-        {
-            if (await AddAuthorizationHeader() is { Success: false } error)
-            {
-                return ApiResult.From(error);
-            }
-
-            // HttpClient.DeleteAsync does not natively support a body, so build the request explicitly.
-            var request = new HttpRequestMessage(HttpMethod.Delete,
-                $"api/{config.ControllerName}/user/{userId}")
-            {
-                Content = JsonContent.Create(new UserRoleRequest { RoleName = roleName }, options: Options)
-            };
-
-            var response = await http.SendAsync(request);
-            var dtoResult = await response.Content.ReadFromJsonAsync<ApiResultDto>(Options)
-                            ?? throw new HttpRequestException("Failed to deserialize response");
-
-            return dtoResult.From();
-        }
-        catch (Exception e)
-        {
-            return ApiResult.CreateFailResult(e.Message);
-        }
-        finally
-        {
-            ClearAuthorizationHeader();
-        }
-    }
+                // HttpClient.DeleteAsync does not natively support a body, so build the request explicitly.
+                // A fresh HttpRequestMessage is created on each invocation because the content stream
+                // is consumed on first send — the delegate is called twice on the 401-retry path.
+                var req = new HttpRequestMessage(HttpMethod.Delete, $"api/{config.ControllerName}/user/{userId}")
+                {
+                    Content = JsonContent.Create(new UserRoleRequest { RoleName = roleName }, options: Options)
+                };
+                return http.SendAsync(req);
+            },
+            DeserializeApiResult);
 }
