@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using AuthBlocksModels.ApiModels;
 using AuthBlocksWeb.Services;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
@@ -22,89 +21,26 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
     public const string SessionExpiredMessage = "Session expired";
 
     private readonly ITokenService _tokenService;
-    private readonly IAuthApiClient _authApiClient;
-    private readonly ISessionExpiredAction _sessionExpiredAction;
 
     protected AuthorizingModelClient(
         TConfig config,
         IOptions<JsonSerializerOptions> options,
-        ITokenService tokenService,
-        IAuthApiClient authApiClient,
-        ISessionExpiredAction sessionExpiredAction) : base(config, options)
+        ITokenService tokenService) : base(config, options)
     {
         _tokenService = tokenService;
-        _authApiClient = authApiClient;
-        _sessionExpiredAction = sessionExpiredAction;
     }
 
-    protected async Task<Result> AddAuthorizationHeader()
-    {
-        var token = await _tokenService.GetAccessTokenAsync();
-        if (string.IsNullOrEmpty(token))
-        {
-            return Result.CreateFailResult(SessionExpiredMessage);
-        }
-
-        http.DefaultRequestHeaders.Authorization =
+    // Header helpers are protected (not private) so that the rare endpoint
+    // which can't be expressed through SendWithAuth (different result type,
+    // custom DTO shape, etc.) can still participate in the auth lifecycle by
+    // composing GetValidTokenAsync + ForceRefreshAsync from ITokenService.
+    // See PendingRegistrationClient.CreatePendingRegistration for an example.
+    protected void SetAuthorizationHeader(string token)
+        => http.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        return Result.CreatePassResult();
-    }
-
     protected void ClearAuthorizationHeader()
-    {
-        http.DefaultRequestHeaders.Authorization = null;
-    }
-
-    /// <summary>
-    /// Verifies the access token is still valid (proactive check). If the
-    /// JWT has expired or is missing, attempts a single refresh via the
-    /// stored refresh token. Returns a failing <see cref="Result"/> with
-    /// <see cref="SessionExpiredMessage"/> when no usable token can be
-    /// obtained so callers can short-circuit the request.
-    /// </summary>
-    private async Task<Result> EnsureValidTokenAsync()
-    {
-        if (await _tokenService.IsTokenValidAsync())
-        {
-            return Result.CreatePassResult();
-        }
-
-        return await TryRefreshTokensAsync()
-            ? Result.CreatePassResult()
-            : Result.CreateFailResult(SessionExpiredMessage);
-    }
-
-    /// <summary>
-    /// Calls the refresh endpoint with the currently stored access + refresh
-    /// tokens. On success <see cref="AuthApiClient"/> writes the new pair to
-    /// the token store before returning, so no duplicate storage is needed
-    /// here. Any failure (missing tokens, server rejection, exception) is
-    /// reported as <c>false</c>.
-    /// </summary>
-    private async Task<bool> TryRefreshTokensAsync()
-    {
-        try
-        {
-            var accessToken = await _tokenService.GetAccessTokenAsync();
-            var refreshToken = await _tokenService.GetRefreshTokenAsync();
-            if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
-            {
-                return false;
-            }
-
-            var response = await _authApiClient.RefreshTokenAsync(new RefreshTokenRequest
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-            });
-            return response is { Success: true, Value: not null };
-        }
-        catch
-        {
-            return false;
-        }
-    }
+        => http.DefaultRequestHeaders.Authorization = null;
 
     /// <summary>
     /// Runs <paramref name="send"/> wrapped in the auth lifecycle: proactive
@@ -120,37 +56,37 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
     {
         try
         {
-            if (await EnsureValidTokenAsync() is { Success: false } sessionError)
+            // Proactive: TokenService handles expiry check, refresh, and
+            // cascade notification when no usable token can be obtained.
+            var token = await _tokenService.GetValidTokenAsync();
+            if (token == null)
             {
-                await _sessionExpiredAction.HandleAsync();
-                return ApiResult<TResult>.From(sessionError);
-            }
-            if (await AddAuthorizationHeader() is { Success: false } headerError)
-            {
-                return ApiResult<TResult>.From(headerError);
+                return ApiResult<TResult>.CreateFailResult(SessionExpiredMessage);
             }
 
+            SetAuthorizationHeader(token);
             var response = await send();
+
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                // Reactive: token was accepted by IsTokenValidAsync (still
-                // within its exp window) but the server rejected it anyway
-                // (revoked, key rotation, etc.). Refresh + retry once.
-                if (!await TryRefreshTokensAsync())
+                // Reactive: token was valid locally but the server rejected
+                // it (revoked, key rotation, etc.). Force a refresh and retry
+                // once. TokenService handles cascade notification on failure.
+                var refreshedToken = await _tokenService.ForceRefreshAsync();
+                if (refreshedToken == null)
                 {
-                    await _sessionExpiredAction.HandleAsync();
                     return ApiResult<TResult>.CreateFailResult(SessionExpiredMessage);
-                }
-                if (await AddAuthorizationHeader() is { Success: false } retryHeaderError)
-                {
-                    return ApiResult<TResult>.From(retryHeaderError);
                 }
 
+                SetAuthorizationHeader(refreshedToken);
                 response = await send();
+
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
                 {
-                    await _sessionExpiredAction.HandleAsync();
-                    return ApiResult<TResult>.CreateFailResult(SessionExpiredMessage);
+                    // Refresh succeeded but the server still 401'd — this is
+                    // an authorization issue, not session expiry. Don't log
+                    // the user out; let the caller surface the error.
+                    return ApiResult<TResult>.CreateFailResult("Authorization failed");
                 }
             }
 
@@ -176,34 +112,29 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
     {
         try
         {
-            if (await EnsureValidTokenAsync() is { Success: false } sessionError)
+            var token = await _tokenService.GetValidTokenAsync();
+            if (token == null)
             {
-                await _sessionExpiredAction.HandleAsync();
-                return ApiResult.From(sessionError);
-            }
-            if (await AddAuthorizationHeader() is { Success: false } headerError)
-            {
-                return ApiResult.From(headerError);
+                return ApiResult.CreateFailResult(SessionExpiredMessage);
             }
 
+            SetAuthorizationHeader(token);
             var response = await send();
+
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                if (!await TryRefreshTokensAsync())
+                var refreshedToken = await _tokenService.ForceRefreshAsync();
+                if (refreshedToken == null)
                 {
-                    await _sessionExpiredAction.HandleAsync();
                     return ApiResult.CreateFailResult(SessionExpiredMessage);
-                }
-                if (await AddAuthorizationHeader() is { Success: false } retryHeaderError)
-                {
-                    return ApiResult.From(retryHeaderError);
                 }
 
+                SetAuthorizationHeader(refreshedToken);
                 response = await send();
+
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
                 {
-                    await _sessionExpiredAction.HandleAsync();
-                    return ApiResult.CreateFailResult(SessionExpiredMessage);
+                    return ApiResult.CreateFailResult("Authorization failed");
                 }
             }
 

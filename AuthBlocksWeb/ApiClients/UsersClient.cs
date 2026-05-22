@@ -10,10 +10,8 @@ public class UsersClient : AuthorizingModelClient<UserModel, UsersClientConfig>,
     public UsersClient(
         UsersClientConfig config,
         IOptions<JsonSerializerOptions> options,
-        ITokenService tokenService,
-        IAuthApiClient authApiClient,
-        ISessionExpiredAction sessionExpiredAction)
-        : base(config, options, tokenService, authApiClient, sessionExpiredAction)
+        ITokenService tokenService)
+        : base(config, options, tokenService)
     {
     }
 }
