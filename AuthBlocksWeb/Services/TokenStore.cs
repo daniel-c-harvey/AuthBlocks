@@ -3,13 +3,13 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace AuthBlocksWeb.Services;
 
-public class TokenService : ITokenService
+public class TokenStore : ITokenStore
 {
     private readonly IJSRuntime _jsRuntime;
     private const string AccessTokenKey = "authblocks_access_token";
     private const string RefreshTokenKey = "authblocks_refresh_token";
 
-    public TokenService(IJSRuntime jsRuntime)
+    public TokenStore(IJSRuntime jsRuntime)
     {
         _jsRuntime = jsRuntime;
     }
@@ -76,7 +76,7 @@ public class TokenService : ITokenService
         {
             var jwtHandler = new JwtSecurityTokenHandler();
             var jwtToken = jwtHandler.ReadJwtToken(token);
-            
+
             // Check if token is expired (with 1 minute buffer)
             return jwtToken.ValidTo > DateTime.UtcNow.AddMinutes(1);
         }
@@ -85,4 +85,4 @@ public class TokenService : ITokenService
             return false;
         }
     }
-} 
+}

@@ -2,8 +2,10 @@
 @using AuthBlocksModels.SystemDefinitions
 @using AuthBlocksWeb.ApiClients
 @using AuthBlocksWeb.HierarchicalAuthorize
+@using AuthBlocksWeb.Services
 
 @inject IAuthApiClient AuthApiClient
+@inject IAuthSession AuthSession
 
 @attribute [HierarchicalRoleAuthorize(SystemRoleConstants.UserAdmin)]
 @page "/account/superregister"
@@ -103,7 +105,13 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var rolesResult = await AuthApiClient.GetRolesAsync();
+        var token = await AuthSession.GetValidTokenAsync();
+        if (token is null)
+        {
+            return;
+        }
+
+        var rolesResult = await AuthApiClient.GetRolesAsync(token);
         if (rolesResult.Success && rolesResult.Value is not null)
         {
             _availableRoles = rolesResult.Value;
@@ -123,7 +131,14 @@
 
         try
         {
-            var result = await AuthApiClient.AdminRegisterAsync(Input);
+            var token = await AuthSession.GetValidTokenAsync();
+            if (token is null)
+            {
+                Message = "Your session has expired. Please log in again.";
+                return;
+            }
+
+            var result = await AuthApiClient.AdminRegisterAsync(Input, token);
             if (result.Success)
             {
                 Message = $"Account '{Input.UserName}' created successfully.";
