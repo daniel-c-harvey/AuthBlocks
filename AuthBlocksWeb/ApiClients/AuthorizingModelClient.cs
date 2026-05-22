@@ -20,7 +20,7 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
     // has no dedicated error-code surface, so the message text is the contract.
     public const string SessionExpiredMessage = "Session expired";
 
-    private readonly ITokenService _tokenService;
+    protected readonly ITokenService _tokenService;
 
     protected AuthorizingModelClient(
         TConfig config,

@@ -26,6 +26,10 @@ public static class Startup
         services.AddScoped<JwtAuthenticationStateProvider>();
         services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<JwtAuthenticationStateProvider>());
         services.AddScoped<ISessionExpiredAction>(sp => sp.GetRequiredService<JwtAuthenticationStateProvider>());
+        // Lazy<ISessionExpiredAction> breaks the TokenService <-> JwtAuthenticationStateProvider
+        // construction cycle: both objects construct independently and the dependency only
+        // resolves the first time a session-expiry path fires.
+        services.AddScoped(sp => new Lazy<ISessionExpiredAction>(() => sp.GetRequiredService<ISessionExpiredAction>()));
         
         services.AddSingleton(new AuthClientConfig(apiBaseUrl));
         services.AddScoped<IAuthApiClient, AuthApiClient>();

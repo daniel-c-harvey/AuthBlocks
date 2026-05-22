@@ -1,6 +1,7 @@
 using AuthBlocksModels.ApiModels;
 using AuthBlocksModels.Models;
 using AuthBlocksWeb.ApiClients;
+using AuthBlocksWeb.Services;
 using Models.Common;
 using NetBlocks.Models;
 
@@ -16,15 +17,18 @@ public class PermissionsViewModel
     private readonly UsersClient _usersClient;
     private readonly IUserRolesClient _userRolesClient;
     private readonly IAuthApiClient _authApiClient;
+    private readonly ITokenService _tokenService;
 
     public PermissionsViewModel(
         UsersClient usersClient,
         IUserRolesClient userRolesClient,
-        IAuthApiClient authApiClient)
+        IAuthApiClient authApiClient,
+        ITokenService tokenService)
     {
         _usersClient = usersClient;
         _userRolesClient = userRolesClient;
         _authApiClient = authApiClient;
+        _tokenService = tokenService;
     }
 
     public async Task<IEnumerable<UserModel>> SearchUsers(string? search, CancellationToken ct = default)
@@ -49,8 +53,17 @@ public class PermissionsViewModel
     public Task<ApiResult<List<RoleInfo>>> GetRolesForUser(long userId)
         => _userRolesClient.GetRolesForUser(userId);
 
-    public Task<ApiResult<List<RoleInfo>>> GetAllRoles()
-        => _authApiClient.GetRolesAsync();
+    public async Task<ApiResult<List<RoleInfo>>> GetAllRoles()
+    {
+        var accessToken = await _tokenService.GetValidTokenAsync();
+        if (accessToken == null)
+        {
+            // Reuse the AuthorizingModelClient signal so any future caller can
+            // distinguish session expiry from a domain failure.
+            return ApiResult<List<RoleInfo>>.CreateFailResult(UsersClient.SessionExpiredMessage);
+        }
+        return await _authApiClient.GetRolesAsync(accessToken);
+    }
 
     public Task<ApiResult> AssignRole(long userId, string roleName)
         => _userRolesClient.AddUserToRole(userId, roleName);

@@ -80,17 +80,17 @@ public class JwtAuthenticationStateProvider : AuthenticationStateProvider, ISess
             var response = await _authApiClient.LoginAsync(loginRequest);
             if (response.Success && response.Value != null)
             {
+                // AuthApiClient no longer touches the token store, so the caller
+                // owns persistence. Store before notifying the cascade so any
+                // observer that re-reads the token sees the freshly-issued pair.
+                await _tokenService.SetTokensAsync(response.Value.AccessToken, response.Value.RefreshToken);
+
                 // Clear the role cache when a new user logs in
                 _hierarchicalRoleService.ClearCache();
-                
-                // Ensure localStorage operations are complete before notifying
-                var token = await _tokenService.GetAccessTokenAsync();
-                if (!string.IsNullOrEmpty(token))
-                {
-                    // Pre-compute the authentication state to ensure it's ready
-                    var authState = await GetAuthenticationStateAsync();
-                    NotifyAuthenticationStateChanged(Task.FromResult(authState));
-                }
+
+                // Pre-compute the authentication state to ensure it's ready
+                var authState = await GetAuthenticationStateAsync();
+                NotifyAuthenticationStateChanged(Task.FromResult(authState));
                 return LoginResult.CreatePassResult();
             }
             return LoginResult.From(response);
@@ -108,17 +108,16 @@ public class JwtAuthenticationStateProvider : AuthenticationStateProvider, ISess
             var response = await _authApiClient.RegisterAsync(registerRequest);
             if (response.Success && response.Value != null)
             {
+                // AuthApiClient no longer touches the token store, so the caller
+                // owns persistence. Store before notifying the cascade.
+                await _tokenService.SetTokensAsync(response.Value.AccessToken, response.Value.RefreshToken);
+
                 // Clear the role cache when a new user registers
                 _hierarchicalRoleService.ClearCache();
-                
-                // Ensure localStorage operations are complete before notifying
-                var token = await _tokenService.GetAccessTokenAsync();
-                if (!string.IsNullOrEmpty(token))
-                {
-                    // Pre-compute the authentication state to ensure it's ready
-                    var authState = await GetAuthenticationStateAsync();
-                    NotifyAuthenticationStateChanged(Task.FromResult(authState));
-                }
+
+                // Pre-compute the authentication state to ensure it's ready
+                var authState = await GetAuthenticationStateAsync();
+                NotifyAuthenticationStateChanged(Task.FromResult(authState));
             }
             return Result.From(response);
         }
@@ -190,7 +189,10 @@ public class JwtAuthenticationStateProvider : AuthenticationStateProvider, ISess
             var response = await _authApiClient.RefreshTokenAsync(refreshRequest);
             if (response.Success && response.Value != null)
             {
-                // Token is saved in AuthApiClient, notify about state change
+                // AuthApiClient no longer persists the refreshed pair; store it
+                // here so the next GetAccessTokenAsync sees the new token.
+                await _tokenService.SetTokensAsync(response.Value.AccessToken, response.Value.RefreshToken);
+
                 var authState = await GetAuthenticationStateAsync();
                 NotifyAuthenticationStateChanged(Task.FromResult(authState));
                 return (true, response.Value.AccessToken);

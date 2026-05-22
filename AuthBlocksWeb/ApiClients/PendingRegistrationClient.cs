@@ -10,14 +10,11 @@ namespace AuthBlocksWeb.ApiClients;
 
 public class PendingRegistrationClient : AuthorizingModelClient<PendingRegistrationModel, PendingRegistrationClientConfig>, IPendingRegistrationClient
 {
-    private readonly ITokenService _tokenService;
-
     public PendingRegistrationClient(PendingRegistrationClientConfig config,
                                      IOptions<JsonSerializerOptions> options,
                                      ITokenService tokenService)
         : base(config, options, tokenService)
     {
-        _tokenService = tokenService;
     }
 
     // Cannot use SendWithAuth because the endpoint returns RegistrationCreatedResult

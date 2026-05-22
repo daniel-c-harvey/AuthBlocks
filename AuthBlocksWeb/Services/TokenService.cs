@@ -1,6 +1,5 @@
 using AuthBlocksModels.ApiModels;
 using AuthBlocksWeb.ApiClients;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using System.IdentityModel.Tokens.Jwt;
 
@@ -9,20 +8,23 @@ namespace AuthBlocksWeb.Services;
 public class TokenService : ITokenService
 {
     private readonly IJSRuntime _jsRuntime;
-    // IAuthApiClient depends (transitively) on ITokenService, so direct injection
-    // would close a construction-time cycle. We resolve it lazily from the scope
-    // at call time, by which point both objects are fully constructed.
-    // ISessionExpiredAction is resolved the same way for symmetry and to keep
-    // TokenService usable in contexts where the Blazor cascade isn't wired up
-    // (e.g. tests, background services).
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IAuthApiClient _authApiClient;
+    // ISessionExpiredAction (the JwtAuthenticationStateProvider) takes ITokenService,
+    // so direct injection would close a construction-time cycle. Lazy<T> breaks the
+    // cycle: both objects construct independently and the dependency only resolves
+    // the first time a session-expiry path actually fires.
+    private readonly Lazy<ISessionExpiredAction> _sessionExpiredAction;
     private const string AccessTokenKey = "authblocks_access_token";
     private const string RefreshTokenKey = "authblocks_refresh_token";
 
-    public TokenService(IJSRuntime jsRuntime, IServiceProvider serviceProvider)
+    public TokenService(
+        IJSRuntime jsRuntime,
+        IAuthApiClient authApiClient,
+        Lazy<ISessionExpiredAction> sessionExpiredAction)
     {
         _jsRuntime = jsRuntime;
-        _serviceProvider = serviceProvider;
+        _authApiClient = authApiClient;
+        _sessionExpiredAction = sessionExpiredAction;
     }
 
     public async Task<string?> GetAccessTokenAsync()
@@ -111,7 +113,7 @@ public class TokenService : ITokenService
 
         // Both checks failed — clear tokens and notify the cascade.
         await ClearTokensAsync();
-        await _serviceProvider.GetRequiredService<ISessionExpiredAction>().HandleAsync();
+        await _sessionExpiredAction.Value.HandleAsync();
         return null;
     }
 
@@ -124,16 +126,15 @@ public class TokenService : ITokenService
 
         // Refresh failed — clear tokens and notify the cascade.
         await ClearTokensAsync();
-        await _serviceProvider.GetRequiredService<ISessionExpiredAction>().HandleAsync();
+        await _sessionExpiredAction.Value.HandleAsync();
         return null;
     }
 
     /// <summary>
     /// Calls the refresh endpoint with the currently stored access + refresh
-    /// tokens. On success <see cref="AuthApiClient"/> writes the new pair to
-    /// the token store before returning, so no duplicate storage is needed
-    /// here. Any failure (missing tokens, server rejection, exception) is
-    /// reported as <c>false</c>.
+    /// tokens. On success, stores the new pair before returning so callers
+    /// can immediately read the fresh access token. Any failure (missing
+    /// tokens, server rejection, exception) is reported as <c>false</c>.
     /// </summary>
     private async Task<bool> TryRefreshInternalAsync()
     {
@@ -146,13 +147,19 @@ public class TokenService : ITokenService
                 return false;
             }
 
-            var authApiClient = _serviceProvider.GetRequiredService<IAuthApiClient>();
-            var response = await authApiClient.RefreshTokenAsync(new RefreshTokenRequest
+            var response = await _authApiClient.RefreshTokenAsync(new RefreshTokenRequest
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
             });
-            return response is { Success: true, Value: not null };
+
+            if (response is { Success: true, Value: not null })
+            {
+                await SetTokensAsync(response.Value.AccessToken, response.Value.RefreshToken);
+                return true;
+            }
+
+            return false;
         }
         catch
         {

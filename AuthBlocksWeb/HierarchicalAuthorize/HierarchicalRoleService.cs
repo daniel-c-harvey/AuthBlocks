@@ -1,5 +1,6 @@
 ﻿using AuthBlocksWeb.ApiClients;
 using AuthBlocksModels.ApiModels;
+using AuthBlocksWeb.Services;
 using Microsoft.Extensions.Logging;
 
 namespace AuthBlocksWeb.HierarchicalAuthorize;
@@ -7,15 +8,20 @@ namespace AuthBlocksWeb.HierarchicalAuthorize;
 public class HierarchicalRoleService : IHierarchicalRoleService
 {
     private readonly IAuthApiClient _authApiClient;
+    private readonly ITokenService _tokenService;
     private readonly ILogger<HierarchicalRoleService> _logger;
     private readonly Dictionary<string, bool> _roleInheritanceCache = new();
     private readonly object _cacheLock = new();
     private DateTime _lastCacheRefresh = DateTime.MinValue;
     private readonly TimeSpan _cacheExpiry = TimeSpan.FromMinutes(5); // Cache for 5 minutes
 
-    public HierarchicalRoleService(IAuthApiClient authApiClient, ILogger<HierarchicalRoleService> logger)
+    public HierarchicalRoleService(
+        IAuthApiClient authApiClient,
+        ITokenService tokenService,
+        ILogger<HierarchicalRoleService> logger)
     {
         _authApiClient = authApiClient;
+        _tokenService = tokenService;
         _logger = logger;
     }
 
@@ -82,8 +88,21 @@ public class HierarchicalRoleService : IHierarchicalRoleService
                 _logger.LogDebug("Hierarchical role cache refreshed");
             }
 
+            // Use GetAccessTokenAsync (not GetValidTokenAsync) here: the authorization
+            // pipeline calls this on every request, and a full refresh-or-bust check would
+            // either thrash the refresh endpoint or short-circuit auth on expiry. The auth
+            // pipeline is for *answering* whether the caller is allowed; an expired token
+            // simply means they aren't, and the next outbound API call will trigger the
+            // proper refresh flow.
+            var accessToken = await _tokenService.GetAccessTokenAsync();
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                _logger.LogDebug("No access token available for role hierarchy check");
+                return false;
+            }
+
             // Get all roles from the API to check hierarchy
-            var rolesResult = await _authApiClient.GetRolesAsync();
+            var rolesResult = await _authApiClient.GetRolesAsync(accessToken);
             if (!rolesResult.Success || rolesResult.Value == null)
             {
                 _logger.LogWarning("Failed to retrieve roles from API for hierarchy check. Success: {Success}", rolesResult.Success);
