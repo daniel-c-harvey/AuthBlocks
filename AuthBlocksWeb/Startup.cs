@@ -21,15 +21,15 @@ public static class Startup
         // Add Blazor authentication state management
         services.AddCascadingAuthenticationState();
 
-        // Add custom JWT-based authentication services
-        services.AddScoped<ITokenService, TokenService>();
+        // Add custom JWT-based authentication services.
+        // ITokenStore (pure storage) terminates the dep chain — it has no auth-API
+        // or cascade dependency — so AuthSession → ISessionExpiredAction →
+        // JwtAuthenticationStateProvider → ITokenStore composes without a cycle.
+        services.AddScoped<ITokenStore, TokenStore>();
         services.AddScoped<JwtAuthenticationStateProvider>();
         services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<JwtAuthenticationStateProvider>());
         services.AddScoped<ISessionExpiredAction>(sp => sp.GetRequiredService<JwtAuthenticationStateProvider>());
-        // Lazy<ISessionExpiredAction> breaks the TokenService <-> JwtAuthenticationStateProvider
-        // construction cycle: both objects construct independently and the dependency only
-        // resolves the first time a session-expiry path fires.
-        services.AddScoped(sp => new Lazy<ISessionExpiredAction>(() => sp.GetRequiredService<ISessionExpiredAction>()));
+        services.AddScoped<IAuthSession, AuthSession>();
         
         services.AddSingleton(new AuthClientConfig(apiBaseUrl));
         services.AddScoped<IAuthApiClient, AuthApiClient>();

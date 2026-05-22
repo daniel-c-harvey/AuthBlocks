@@ -1,17 +1,16 @@
 namespace AuthBlocksWeb.Services;
 
-public interface ITokenService
+/// <summary>
+/// Session lifecycle: obtains a usable access token (refreshing transparently
+/// when needed) and notifies the Blazor auth cascade via
+/// <see cref="ISessionExpiredAction"/> when the session cannot be recovered.
+/// </summary>
+public interface IAuthSession
 {
-    Task<string?> GetAccessTokenAsync();
-    Task<string?> GetRefreshTokenAsync();
-    Task SetTokensAsync(string accessToken, string refreshToken);
-    Task ClearTokensAsync();
-    Task<bool> IsTokenValidAsync();
-
     /// <summary>
     /// Returns a valid access token, refreshing silently if the current one is
-    /// expired. If no valid token can be obtained (refresh token also expired or
-    /// missing), clears stored tokens, notifies the auth cascade via
+    /// expired. If no valid token can be obtained (refresh token also expired
+    /// or missing), clears stored tokens, notifies the auth cascade via
     /// <see cref="ISessionExpiredAction"/>, and returns <c>null</c>.
     /// </summary>
     Task<string?> GetValidTokenAsync();

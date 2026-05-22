@@ -8,7 +8,7 @@ namespace AuthBlocksWeb.HierarchicalAuthorize;
 public class HierarchicalRoleService : IHierarchicalRoleService
 {
     private readonly IAuthApiClient _authApiClient;
-    private readonly ITokenService _tokenService;
+    private readonly ITokenStore _tokenStore;
     private readonly ILogger<HierarchicalRoleService> _logger;
     private readonly Dictionary<string, bool> _roleInheritanceCache = new();
     private readonly object _cacheLock = new();
@@ -17,11 +17,11 @@ public class HierarchicalRoleService : IHierarchicalRoleService
 
     public HierarchicalRoleService(
         IAuthApiClient authApiClient,
-        ITokenService tokenService,
+        ITokenStore tokenStore,
         ILogger<HierarchicalRoleService> logger)
     {
         _authApiClient = authApiClient;
-        _tokenService = tokenService;
+        _tokenStore = tokenStore;
         _logger = logger;
     }
 
@@ -94,7 +94,7 @@ public class HierarchicalRoleService : IHierarchicalRoleService
             // pipeline is for *answering* whether the caller is allowed; an expired token
             // simply means they aren't, and the next outbound API call will trigger the
             // proper refresh flow.
-            var accessToken = await _tokenService.GetAccessTokenAsync();
+            var accessToken = await _tokenStore.GetAccessTokenAsync();
             if (string.IsNullOrEmpty(accessToken))
             {
                 _logger.LogDebug("No access token available for role hierarchy check");

@@ -5,7 +5,7 @@
 @using AuthBlocksWeb.Services
 
 @inject IAuthApiClient AuthApiClient
-@inject ITokenService TokenService
+@inject IAuthSession AuthSession
 
 @attribute [HierarchicalRoleAuthorize(SystemRoleConstants.UserAdmin)]
 @page "/account/superregister"
@@ -105,7 +105,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var token = await TokenService.GetValidTokenAsync();
+        var token = await AuthSession.GetValidTokenAsync();
         if (token is null)
         {
             return;
@@ -131,7 +131,7 @@
 
         try
         {
-            var token = await TokenService.GetValidTokenAsync();
+            var token = await AuthSession.GetValidTokenAsync();
             if (token is null)
             {
                 Message = "Your session has expired. Please log in again.";

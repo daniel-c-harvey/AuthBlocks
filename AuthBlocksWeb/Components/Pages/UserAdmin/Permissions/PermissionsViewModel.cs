@@ -17,18 +17,18 @@ public class PermissionsViewModel
     private readonly UsersClient _usersClient;
     private readonly IUserRolesClient _userRolesClient;
     private readonly IAuthApiClient _authApiClient;
-    private readonly ITokenService _tokenService;
+    private readonly IAuthSession _authSession;
 
     public PermissionsViewModel(
         UsersClient usersClient,
         IUserRolesClient userRolesClient,
         IAuthApiClient authApiClient,
-        ITokenService tokenService)
+        IAuthSession authSession)
     {
         _usersClient = usersClient;
         _userRolesClient = userRolesClient;
         _authApiClient = authApiClient;
-        _tokenService = tokenService;
+        _authSession = authSession;
     }
 
     public async Task<IEnumerable<UserModel>> SearchUsers(string? search, CancellationToken ct = default)
@@ -55,7 +55,7 @@ public class PermissionsViewModel
 
     public async Task<ApiResult<List<RoleInfo>>> GetAllRoles()
     {
-        var accessToken = await _tokenService.GetValidTokenAsync();
+        var accessToken = await _authSession.GetValidTokenAsync();
         if (accessToken == null)
         {
             // Reuse the AuthorizingModelClient signal so any future caller can

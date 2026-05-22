@@ -12,20 +12,20 @@ public class PendingRegistrationClient : AuthorizingModelClient<PendingRegistrat
 {
     public PendingRegistrationClient(PendingRegistrationClientConfig config,
                                      IOptions<JsonSerializerOptions> options,
-                                     ITokenService tokenService)
-        : base(config, options, tokenService)
+                                     IAuthSession authSession)
+        : base(config, options, authSession)
     {
     }
 
     // Cannot use SendWithAuth because the endpoint returns RegistrationCreatedResult
     // (a NetBlocks ResultBase<T> sibling of ApiResult, not an ApiResult itself), so
-    // we run the auth lifecycle inline via ITokenService. Same proactive-then-reactive
-    // pattern as SendWithAuth; TokenService handles cascade notification on failure.
+    // we run the auth lifecycle inline via IAuthSession. Same proactive-then-reactive
+    // pattern as SendWithAuth; AuthSession handles cascade notification on failure.
     public async Task<RegistrationCreatedResult> CreatePendingRegistration(string email, IEnumerable<RoleModel>? roles, string returnUrl)
     {
         try
         {
-            var token = await _tokenService.GetValidTokenAsync();
+            var token = await _authSession.GetValidTokenAsync();
             if (token == null)
             {
                 return RegistrationCreatedResult.CreateFailResult(SessionExpiredMessage);
@@ -37,7 +37,7 @@ public class PendingRegistrationClient : AuthorizingModelClient<PendingRegistrat
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                var refreshedToken = await _tokenService.ForceRefreshAsync();
+                var refreshedToken = await _authSession.ForceRefreshAsync();
                 if (refreshedToken == null)
                 {
                     return RegistrationCreatedResult.CreateFailResult(SessionExpiredMessage);

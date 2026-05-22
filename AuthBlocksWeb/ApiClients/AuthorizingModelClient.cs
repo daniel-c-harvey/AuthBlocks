@@ -20,20 +20,20 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
     // has no dedicated error-code surface, so the message text is the contract.
     public const string SessionExpiredMessage = "Session expired";
 
-    protected readonly ITokenService _tokenService;
+    protected readonly IAuthSession _authSession;
 
     protected AuthorizingModelClient(
         TConfig config,
         IOptions<JsonSerializerOptions> options,
-        ITokenService tokenService) : base(config, options)
+        IAuthSession authSession) : base(config, options)
     {
-        _tokenService = tokenService;
+        _authSession = authSession;
     }
 
     // Header helpers are protected (not private) so that the rare endpoint
     // which can't be expressed through SendWithAuth (different result type,
     // custom DTO shape, etc.) can still participate in the auth lifecycle by
-    // composing GetValidTokenAsync + ForceRefreshAsync from ITokenService.
+    // composing GetValidTokenAsync + ForceRefreshAsync from IAuthSession.
     // See PendingRegistrationClient.CreatePendingRegistration for an example.
     protected void SetAuthorizationHeader(string token)
         => http.DefaultRequestHeaders.Authorization =
@@ -56,9 +56,9 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
     {
         try
         {
-            // Proactive: TokenService handles expiry check, refresh, and
+            // Proactive: AuthSession handles expiry check, refresh, and
             // cascade notification when no usable token can be obtained.
-            var token = await _tokenService.GetValidTokenAsync();
+            var token = await _authSession.GetValidTokenAsync();
             if (token == null)
             {
                 return ApiResult<TResult>.CreateFailResult(SessionExpiredMessage);
@@ -71,8 +71,8 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
             {
                 // Reactive: token was valid locally but the server rejected
                 // it (revoked, key rotation, etc.). Force a refresh and retry
-                // once. TokenService handles cascade notification on failure.
-                var refreshedToken = await _tokenService.ForceRefreshAsync();
+                // once. AuthSession handles cascade notification on failure.
+                var refreshedToken = await _authSession.ForceRefreshAsync();
                 if (refreshedToken == null)
                 {
                     return ApiResult<TResult>.CreateFailResult(SessionExpiredMessage);
@@ -112,7 +112,7 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
     {
         try
         {
-            var token = await _tokenService.GetValidTokenAsync();
+            var token = await _authSession.GetValidTokenAsync();
             if (token == null)
             {
                 return ApiResult.CreateFailResult(SessionExpiredMessage);
@@ -123,7 +123,7 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                var refreshedToken = await _tokenService.ForceRefreshAsync();
+                var refreshedToken = await _authSession.ForceRefreshAsync();
                 if (refreshedToken == null)
                 {
                     return ApiResult.CreateFailResult(SessionExpiredMessage);
