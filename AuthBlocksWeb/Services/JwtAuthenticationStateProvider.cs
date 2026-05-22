@@ -160,8 +160,10 @@ public class JwtAuthenticationStateProvider : AuthenticationStateProvider, ISess
         }
     }
 
+    /// <inheritdoc/>
     public async Task HandleAsync()
     {
+        _hierarchicalRoleService.ClearCache();
         await _tokenService.ClearTokensAsync();
         NotifyAuthenticationStateChanged(Task.FromResult(
             new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()))));
