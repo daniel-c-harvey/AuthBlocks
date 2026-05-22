@@ -43,8 +43,8 @@ public class JwtAuthenticationStateProvider : AuthenticationStateProvider, ISess
             // Try to parse the JWT token
             var jwtToken = _jwtHandler.ReadJwtToken(token);
             
-            // Check if token is expired
-            if (jwtToken.ValidTo <= DateTime.UtcNow)
+            // Check if token is expired (with 1-minute buffer to match TokenStore.IsTokenValidAsync)
+            if (jwtToken.ValidTo <= DateTime.UtcNow.AddMinutes(1))
             {
                 // Try to refresh the token
                 var refreshResult = await TryRefreshTokenAsync();
@@ -168,22 +168,25 @@ public class JwtAuthenticationStateProvider : AuthenticationStateProvider, ISess
             new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()))));
     }
 
+    // NOTE: This mirrors AuthSession.TryRefreshInternalAsync. They cannot be
+    // consolidated because JwtAuthenticationStateProvider cannot inject IAuthSession
+    // without reintroducing the circular dependency it was split to avoid.
     private async Task<(bool success, string newToken)> TryRefreshTokenAsync()
     {
         try
         {
             var accessToken = await _tokenStore.GetAccessTokenAsync();
             var refreshToken = await _tokenStore.GetRefreshTokenAsync();
-            
+
             if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
             {
                 return (false, string.Empty);
             }
 
-            var refreshRequest = new RefreshTokenRequest 
-            { 
-                AccessToken = accessToken, 
-                RefreshToken = refreshToken 
+            var refreshRequest = new RefreshTokenRequest
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken
             };
 
             var response = await _authApiClient.RefreshTokenAsync(refreshRequest);
@@ -193,8 +196,6 @@ public class JwtAuthenticationStateProvider : AuthenticationStateProvider, ISess
                 // here so the next GetAccessTokenAsync sees the new token.
                 await _tokenStore.SetTokensAsync(response.Value.AccessToken, response.Value.RefreshToken);
 
-                var authState = await GetAuthenticationStateAsync();
-                NotifyAuthenticationStateChanged(Task.FromResult(authState));
                 return (true, response.Value.AccessToken);
             }
 
