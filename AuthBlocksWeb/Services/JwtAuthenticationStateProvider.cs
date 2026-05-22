@@ -29,8 +29,10 @@ public class JwtAuthenticationStateProvider : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
+        // TokenService.GetAccessTokenAsync is already defensive: it catches all JS interop
+        // exceptions internally and returns null. The null check below handles that path.
         var token = await _tokenService.GetAccessTokenAsync();
-        
+
         if (string.IsNullOrEmpty(token))
         {
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
