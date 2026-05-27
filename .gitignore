@@ -9,3 +9,4 @@ obj/
 **/environment/email_connections.json
 .claude/worktrees/
 nupkgs/
+.idea/
