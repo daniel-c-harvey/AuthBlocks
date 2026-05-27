@@ -104,7 +104,7 @@ internal static class RouteHelpers
         var countResult = await manager.GetPageCount(predicate, paging);
 
         var result = ApiResult<ItemCount>.From(countResult);
-        result.Value = new ItemCount { Count = countResult.Value };
+        result.Value = new ItemCount(countResult.Value);
         var dto = new ApiResultDto<ItemCount>(result);
         return result.Success ? Results.Ok(dto) : Results.Json(dto, statusCode: StatusCodes.Status500InternalServerError);
     }
