@@ -32,11 +32,25 @@ public class UserService : Manager<ApplicationUser, UserModel, IUserRepository, 
     public async Task<ResultContainer<PagedResult<UserModel>>> GetPage(long userId, Expression<Func<ApplicationUser, bool>> predicate, PagingParameters<ApplicationUser> pagingParameters)
     {
         var result = await base.GetPage(predicate, pagingParameters);
-        if (result.Value?.Items is null) return ResultContainer<PagedResult<UserModel>>.CreateFailResult(result.Messages.Select(m => m.Message).ToArray());
-        
-        await DecorateCanDelete(userId, result.Value.Items);
-         
-        return result;
+
+        // Distinguish a genuine read failure from a successful read that carried an
+        // unexpected null shape. Only the former is a Fail; the latter must still
+        // render (as an empty page). The grid runs LINQ over Items without a null
+        // guard, so a null Items reaching the client throws ArgumentNullException
+        // (Parameter 'source') before any row renders.
+        if (!result.Success)
+            return result;
+
+        var page = result.Value ?? new PagedResult<UserModel>
+        {
+            Page = pagingParameters.Page,
+            PageSize = pagingParameters.PageSize
+        };
+        page.Items ??= [];
+
+        await DecorateCanDelete(userId, page.Items);
+
+        return ResultContainer<PagedResult<UserModel>>.CreatePassResult(page);
     }
 
     private async Task DecorateCanDelete(long currentUserId, IEnumerable<UserModel> users)
