@@ -29,6 +29,7 @@ public partial class NewUserForm : ComponentBase
         var token = await AuthSession.GetValidTokenAsync();
         if (token is null)
         {
+            Message = "Roles could not be loaded (session unavailable). You can still create the account without assigning roles.";
             return;
         }
 
@@ -36,6 +37,10 @@ public partial class NewUserForm : ComponentBase
         if (rolesResult.Success && rolesResult.Value is not null)
         {
             _availableRoles = rolesResult.Value;
+        }
+        else
+        {
+            Message = "Roles could not be loaded. You can still create the account without assigning roles.";
         }
     }
 
@@ -66,7 +71,10 @@ public partial class NewUserForm : ComponentBase
             }
             else
             {
-                Message = "Registration failed. Please check your input and try again.";
+                var serverMessage = string.Join("; ", result.Messages.Select(m => m.Message));
+                Message = string.IsNullOrWhiteSpace(serverMessage)
+                    ? "Registration failed. Please check your input and try again."
+                    : serverMessage;
             }
         }
         catch (Exception)
