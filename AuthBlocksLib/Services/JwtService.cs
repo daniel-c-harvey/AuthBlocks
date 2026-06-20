@@ -94,6 +94,24 @@ public class JwtService : IJwtService
         }
     }
 
+    /// <inheritdoc cref="IJwtService.ValidateExpiredToken"/>
+    public ClaimsPrincipal? ValidateExpiredToken(string token)
+    {
+        try
+        {
+            var noLifetimeParams = _tokenValidationParameters.Clone();
+            noLifetimeParams.ValidateLifetime = false;
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var principal = tokenHandler.ValidateToken(token, noLifetimeParams, out _);
+            return principal;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public Task<bool> ValidateRefreshTokenAsync(string refreshToken, long userId)
     {
         return _refreshTokenStore.ValidateAsync(HashToken(refreshToken), userId);
