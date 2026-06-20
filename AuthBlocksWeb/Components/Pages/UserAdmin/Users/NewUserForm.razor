@@ -1,38 +1,85 @@
-﻿<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-5">
-    <EditForm Model="Input" method="post" OnValidSubmit="X" FormName="new-entry">
+@using AuthBlocksModels.ApiModels
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-5">
+    <EditForm Model="Input" method="post" OnValidSubmit="CreateUser" FormName="new-entry">
         <DataAnnotationsValidator/>
         <MudCard Class="rounded-tb-xl">
             <MudCardHeader Class="mud-theme-primary">
                 <MudText Typo="Typo.h5" Align="Align.Center">
                     <MudStack Row AlignItems="AlignItems.Center">
                         <MudIcon Icon="@Icons.Material.Outlined.AddCircleOutline"/>
-                        Activate New User
+                        New User &mdash; Direct Provision
                     </MudStack>
                 </MudText>
             </MudCardHeader>
             <MudCardContent>
                 <MudText Typo="Typo.body1">
-                    Create a new user account, bypassing email registration.  The password must be provided now.
+                    Create a live account now, bypassing email registration. Set the password directly.
                 </MudText>
                 <MudSpacer/>
-                <MudTextField Variant="Variant.Outlined"
-                              Label="Email"
-                              @bind-Text="Input.Email"
-                              For="() => Input.Email">
-
-                </MudTextField>
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" md="6">
+                        <MudTextField Variant="Variant.Outlined"
+                                      Label="Username"
+                                      @bind-Value="Input.UserName"
+                                      For="() => Input.UserName"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField Variant="Variant.Outlined"
+                                      Label="Email"
+                                      @bind-Value="Input.Email"
+                                      For="() => Input.Email"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField Variant="Variant.Outlined"
+                                      Label="Password"
+                                      InputType="InputType.Password"
+                                      @bind-Value="Input.Password"
+                                      For="() => Input.Password"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField Variant="Variant.Outlined"
+                                      Label="Confirm Password"
+                                      InputType="InputType.Password"
+                                      @bind-Value="Input.ConfirmPassword"
+                                      For="() => Input.ConfirmPassword"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudSelect T="long"
+                                   Label="Roles"
+                                   MultiSelection="true"
+                                   SelectedValues="Input.RoleIds"
+                                   SelectedValuesChanged="OnRolesChanged"
+                                   Variant="Variant.Outlined"
+                                   AnchorOrigin="Origin.BottomCenter"
+                                   HelperText="Optional. Select one or more roles to assign.">
+                            @foreach (var role in _availableRoles)
+                            {
+                                <MudSelectItem T="long" Value="role.Id">@role.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
             </MudCardContent>
             <MudCardActions Class="pa-4">
                 <MudButton Href="@($"/useradmin/users")" StartIcon="@Icons.Material.Outlined.ArrowBack" Color="Color.Secondary"
                            Variant="Variant.Filled">Back to users
                 </MudButton>
                 <MudSpacer/>
-                <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Outlined.Save"
-                           Color="Color.Primary" Variant="Variant.Filled">Send Registration Code
+                <MudButton ButtonType="ButtonType.Submit"
+                           StartIcon="@(_isLoading ? Icons.Material.Filled.Refresh : Icons.Material.Outlined.Save)"
+                           Disabled="_isLoading"
+                           Color="Color.Primary" Variant="Variant.Filled">
+                    @(_isLoading ? "Creating account..." : "Create Account")
                 </MudButton>
             </MudCardActions>
         </MudCard>
         <MudSpacer/>
+        @if (Message is not null)
+        {
+            <MudPaper Class="my-2">
+                <MudText Class="mx-2 pa-5">@Message</MudText>
+            </MudPaper>
+        }
         <MudPaper Class="my-2">
             <ValidationSummary class="mx-2 pa-5"/>
         </MudPaper>
