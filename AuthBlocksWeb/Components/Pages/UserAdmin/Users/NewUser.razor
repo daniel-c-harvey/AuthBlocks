@@ -1,4 +1,6 @@
-﻿@page "/useradmin/users/new"
+@using AuthBlocksModels.SystemDefinitions
+
+@attribute [HierarchicalRoleAuthorize(SystemRoleConstants.UserAdmin)]
+@page "/useradmin/users/new"
 
 <NewUserForm/>
-    
