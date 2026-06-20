@@ -291,7 +291,7 @@ internal static class AuthRoutes
     {
         try
         {
-            var principal = jwtService.ValidateToken(request.AccessToken);
+            var principal = jwtService.ValidateExpiredToken(request.AccessToken);
             if (principal == null)
             {
                 var resultFailure = ApiResult<AuthResponse>.CreateFailResult("Invalid access token")
