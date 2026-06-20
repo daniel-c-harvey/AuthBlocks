@@ -11,6 +11,7 @@ using AuthBlocksWeb.Components.Pages.UserAdmin.Permissions;
 using AuthBlocksWeb.Components.Pages.UserAdmin.Registrations;
 using AuthBlocksWeb.Components.Pages.UserAdmin.Users;
 using AuthBlocksWeb.HierarchicalAuthorize;
+using Web;
 
 namespace AuthBlocksWeb;
 
@@ -30,7 +31,12 @@ public static class Startup
         services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<JwtAuthenticationStateProvider>());
         services.AddScoped<ISessionExpiredAction>(sp => sp.GetRequiredService<JwtAuthenticationStateProvider>());
         services.AddScoped<IAuthSession, AuthSession>();
-        
+
+        // Registers EditModalSaveContextHolder (scoped) required by the ModelView-based pages
+        // (Users, Registrations). Delegates to BlazorBlocks.Web's own registration extension
+        // so the registration stays in sync with the library's lifetime expectations.
+        services.AddBlazorBlocksWeb();
+
         services.AddSingleton(new AuthClientConfig(apiBaseUrl));
         services.AddScoped<IAuthApiClient, AuthApiClient>();
         
