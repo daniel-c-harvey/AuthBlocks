@@ -54,6 +54,14 @@ internal static class RouteHelpers
     {
         var queryResult = await manager.Get();
         var result = ApiResult<IEnumerable<TModel>>.From(queryResult);
+
+        // Contract: a successful get-all never delivers a null collection. An empty
+        // result set is an empty enumerable, not null. The client's grid runs LINQ
+        // operators over this value directly; a null source throws
+        // ArgumentNullException (Parameter 'source') before any row renders.
+        if (result.Success)
+            result.Value ??= [];
+
         var dto = new ApiResultDto<IEnumerable<TModel>>(result);
         return result.Success ? Results.Ok(dto) : Results.Json(dto, statusCode: StatusCodes.Status500InternalServerError);
     }
@@ -81,6 +89,15 @@ internal static class RouteHelpers
             : await manager.GetPage(predicate, paging);
 
         var result = ApiResult<PagedResult<TModel>>.From(pageResult);
+
+        // Contract: a successful paged result never delivers a null Items collection.
+        // The client's grid runs LINQ operators over Items directly and only null-guards
+        // the page, not Items — so a null Items there throws ArgumentNullException
+        // (Parameter 'source') before any row renders. A successful manager result always
+        // carries a non-null PagedResult, so only Items needs normalizing here.
+        if (result is { Success: true, Value: { Items: null } page })
+            page.Items = [];
+
         var dto = new ApiResultDto<PagedResult<TModel>>(result);
         return result.Success ? Results.Ok(dto) : Results.Json(dto, statusCode: StatusCodes.Status500InternalServerError);
     }
