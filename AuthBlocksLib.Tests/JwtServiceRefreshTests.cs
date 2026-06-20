@@ -1,13 +1,18 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using AuthBlocksData.Services;
 using AuthBlocksLib.Models;
 using AuthBlocksLib.Services;
+using AuthBlocksModels.ApiModels;
 using AuthBlocksModels.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using MsOptions = Microsoft.Extensions.Options;
+using NetBlocks.Models;
 using NSubstitute;
 using Xunit;
 
@@ -170,7 +175,7 @@ public class JwtServiceRefreshTests
     // ── 5. Wrong-issuer / wrong-audience access token + valid refresh token → fail ──
 
     [Fact]
-    public async Task ValidateExpiredToken_Fails_WhenIssuerWrong()
+    public void ValidateExpiredToken_Fails_WhenIssuerWrong()
     {
         var (service, _) = BuildService();
         var wrongIssuerJwt = IssueExpiredAccessToken(issuer: "evil-issuer");
@@ -179,12 +184,32 @@ public class JwtServiceRefreshTests
     }
 
     [Fact]
-    public async Task ValidateExpiredToken_Fails_WhenAudienceWrong()
+    public void ValidateExpiredToken_Fails_WhenAudienceWrong()
     {
         var (service, _) = BuildService();
         var wrongAudienceJwt = IssueExpiredAccessToken(audience: "wrong-audience");
 
         Assert.Null(service.ValidateExpiredToken(wrongAudienceJwt));
+    }
+
+    // ── 7. ValidateExpiredToken does not mutate the shared validation parameters ──
+
+    [Fact]
+    public async Task ValidateExpiredToken_DoesNotMutate_SharedValidationParameters()
+    {
+        // Arrange: a single JwtService instance with a real expired token.
+        var (service, store) = BuildService();
+        var expiredJwt = IssueExpiredAccessToken();
+        var refreshToken = RandomRefreshToken();
+        await service.SaveRefreshTokenAsync(refreshToken, UserId);
+
+        // Act: ValidateExpiredToken succeeds (lifetime check disabled for this call).
+        var principal = service.ValidateExpiredToken(expiredJwt);
+        Assert.NotNull(principal);
+
+        // Assert: the shared _tokenValidationParameters are unchanged — the global
+        // ValidateToken path must still reject the same expired token.
+        Assert.Null(service.ValidateToken(expiredJwt));
     }
 
     // ── 6. Old refresh token rejected after successful rotation ──────────────
@@ -259,5 +284,160 @@ internal sealed class InMemoryRefreshTokenStore : IRefreshTokenStore
         var expired = _store.Where(kv => kv.Value.ExpiresAt <= now).Select(kv => kv.Key).ToList();
         foreach (var key in expired) _store.Remove(key);
         return Task.FromResult(expired.Count);
+    }
+}
+
+// ── Regression guard: AuthRoutes.RefreshToken endpoint ───────────────────────
+
+/// <summary>
+/// Guards the bug fix that changed <c>AuthRoutes.RefreshToken</c> from calling
+/// <c>jwtService.ValidateToken</c> (lifetime-enforcing) to
+/// <c>jwtService.ValidateExpiredToken</c> (lifetime-skipping).
+///
+/// If someone reverts line 294 of AuthRoutes.cs back to <c>ValidateToken</c>,
+/// the real <see cref="JwtService"/> will return null for an expired access token
+/// and the handler will return 400 — causing this test to fail.
+/// </summary>
+public class AuthRouteRefreshTokenTests
+{
+    private const string Secret = "super-secret-key-that-is-at-least-32-bytes!!";
+    private const string Issuer = "test-issuer";
+    private const string Audience = "test-audience";
+    private const long UserId = 42L;
+
+    private static JwtSettings DefaultSettings() => new()
+    {
+        Secret = Secret,
+        Issuer = Issuer,
+        Audience = Audience,
+        ExpiryMinutes = 60,
+        RefreshTokenExpiryDays = 7
+    };
+
+    /// <summary>
+    /// Issues a JWT that is already expired, signed with the canonical key.
+    /// </summary>
+    private static string IssueExpiredAccessToken()
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Secret));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var now = DateTime.UtcNow;
+        var token = new JwtSecurityToken(
+            issuer: Issuer,
+            audience: Audience,
+            claims:
+            [
+                new Claim(ClaimTypes.NameIdentifier, UserId.ToString()),
+                new Claim(ClaimTypes.Name, "testuser"),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            ],
+            notBefore: now.AddMinutes(-2),
+            expires: now.AddMinutes(-1),
+            signingCredentials: creds);
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private static string RandomRefreshToken()
+    {
+        var bytes = new byte[32];
+        RandomNumberGenerator.Fill(bytes);
+        return Convert.ToBase64String(bytes);
+    }
+
+    // AuthRoutes and AuthLogger are internal to AuthBlocksLib — resolve via the assembly
+    // of a public type from that library rather than referencing the internal names directly.
+    private static readonly Assembly AuthBlocksLibAssembly =
+        typeof(JwtService).Assembly;
+
+    private static readonly Type AuthRoutesType =
+        AuthBlocksLibAssembly.GetType("AuthBlocksLib.Routes.AuthRoutes")
+        ?? throw new InvalidOperationException(
+            "AuthBlocksLib.Routes.AuthRoutes not found — class was renamed or moved.");
+
+    // Reflective handle for the private static handler — resolved once per class.
+    private static readonly MethodInfo RefreshTokenMethod =
+        AuthRoutesType.GetMethod(
+            "RefreshToken",
+            BindingFlags.NonPublic | BindingFlags.Static)
+        ?? throw new InvalidOperationException(
+            "AuthRoutes.RefreshToken not found — method was renamed or removed.");
+
+    // Resolve the internal AuthLogger type so we can substitute ILogger<AuthLogger>.
+    private static readonly Type AuthLoggerType =
+        AuthRoutesType.GetNestedType("AuthLogger", BindingFlags.NonPublic)
+        ?? throw new InvalidOperationException(
+            "AuthRoutes.AuthLogger not found — nested type was renamed or removed.");
+
+    private static object MakeNullLogger()
+    {
+        // NullLogger<T> implements ILogger<T> without Castle DynamicProxy, which cannot
+        // proxy closed generics over internal types in strong-named assemblies.
+        // We resolve the closed generic type at runtime to avoid a compile-time reference
+        // to the internal AuthLogger type.
+        var nullLoggerType = typeof(Microsoft.Extensions.Logging.Abstractions.NullLogger<>)
+            .MakeGenericType(AuthLoggerType);
+        return Activator.CreateInstance(nullLoggerType)!;
+    }
+
+    // ── Regression guard ─────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task RefreshToken_EndpointAcceptsExpiredAccessToken_AndReturnsNewTokenPair()
+    {
+        // Arrange ─────────────────────────────────────────────────────────────
+        var settings = DefaultSettings();
+        var jwtSettings = settings;
+
+        // Real JwtService: ValidateToken rejects expired tokens; ValidateExpiredToken accepts them.
+        var userRoleService = Substitute.For<IUserRoleService>();
+        userRoleService
+            .GetByUser(Arg.Any<UserModel>())
+            .Returns(ResultContainer<IEnumerable<RoleModel>>.CreatePassResult(
+                Array.Empty<RoleModel>()));
+
+        var store = new InMemoryRefreshTokenStore();
+        var opts = MsOptions.Options.Create(settings);
+        var jwtService = new JwtService(opts, userRoleService, store);
+
+        var expiredAccessToken = IssueExpiredAccessToken();
+        var originalRefreshToken = RandomRefreshToken();
+        await jwtService.SaveRefreshTokenAsync(originalRefreshToken, UserId);
+
+        var user = new UserModel { Id = UserId, UserName = "testuser", Email = "test@example.com" };
+        var userService = Substitute.For<IUserService>();
+        userService
+            .GetById(UserId)
+            .Returns(ResultContainer<UserModel>.CreatePassResult(user));
+
+        var request = new RefreshTokenRequest
+        {
+            AccessToken = expiredAccessToken,
+            RefreshToken = originalRefreshToken
+        };
+
+        var logger = MakeNullLogger();
+
+        // Act — invoke the private static handler via reflection ──────────────
+        var task = (Task<IResult>)RefreshTokenMethod.Invoke(
+            null,
+            [request, userService, userRoleService, jwtService, jwtSettings, logger])!;
+        var result = await task;
+
+        // Assert ──────────────────────────────────────────────────────────────
+        // Must be HTTP 200 OK.
+        var statusResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
+        Assert.Equal(StatusCodes.Status200OK, statusResult.StatusCode);
+
+        // The response must carry a new (rotated) access+refresh token pair,
+        // both different from the inputs. ApiResultDto<T>.From() converts the DTO
+        // back to an ApiResult<T> with Success/Value accessible.
+        var valueResult = Assert.IsAssignableFrom<IValueHttpResult>(result);
+        dynamic dto = valueResult.Value!;
+        dynamic apiResult = dto.From();
+        Assert.True((bool)apiResult.Success);
+        string newAccessToken = (string)apiResult.Value.AccessToken;
+        string newRefreshToken = (string)apiResult.Value.RefreshToken;
+        Assert.NotEqual(expiredAccessToken, newAccessToken);
+        Assert.NotEqual(originalRefreshToken, newRefreshToken);
     }
 }
