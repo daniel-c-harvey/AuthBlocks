@@ -8,7 +8,7 @@
 
     <PropertyGroup>
         <PackageId>Cerebellum.AuthBlocks.Web</PackageId>
-        <Version>10.3.37</Version>
+        <!-- Version is centralized in Directory.Build.props -->
         <Authors>Daniel Harvey</Authors>
         <Company>Cerebellum Softworks</Company>
         <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
@@ -50,7 +50,7 @@
 
     <ItemGroup>
       <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.31" />
-      <PackageReference Include="Cerebellum.BlazorBlocks.Web" Version="10.3.33" />
+      <PackageReference Include="Cerebellum.BlazorBlocks.Web" Version="10.3.34" />
       <ProjectReference Include="..\AuthBlocksWeb.Client\AuthBlocksWeb.Client.csproj" />
       <ProjectReference Include="..\AuthBlocksLib\AuthBlocksLib.csproj" />
     </ItemGroup>

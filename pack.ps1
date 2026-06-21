@@ -1,49 +1,55 @@
 #Requires -Version 5.1
+<#
+    Thin wrapper. The real pack/push logic lives ONLY in the shared tooling repo at
+    C:\Development\NuGet (Pack-Library.ps1). This file holds no canonical body: it
+    loads this repo's pack.config.ps1, reads the version from this repo's
+    Directory.Build.props, and forwards everything to the shared script.
+
+    Assumes the shared tooling repo is at C:\Development\NuGet. Override with
+    -ToolingRoot if it lives elsewhere.
+#>
 param(
-    [string]$ApiKey
+    [string]$ApiKey,
+    [switch]$PackOnly,
+    [string]$ToolingRoot = 'C:\Development\NuGet'
 )
 
-if (-not $ApiKey) {
-    $ApiKey = Read-Host "NuGet API key"
-}
-
 $ErrorActionPreference = 'Stop'
+$RepoRoot = $PSScriptRoot
 
-# Wipe and recreate the output directory
-Write-Host "Preparing output directory..."
-if (Test-Path ./nupkgs) {
-    Remove-Item ./nupkgs -Recurse -Force
-}
-New-Item ./nupkgs -ItemType Directory | Out-Null
-
-# Pack
-Write-Host "Packing AuthBlocksModels..."
-dotnet pack AuthBlocksModels/AuthBlocksModels.csproj -c Release -o ./nupkgs
-if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksModels.csproj (exit code $LASTEXITCODE)" }
-
-Write-Host "Packing AuthBlocksData..."
-dotnet pack AuthBlocksData/AuthBlocksData.csproj -c Release -o ./nupkgs
-if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksData.csproj (exit code $LASTEXITCODE)" }
-
-Write-Host "Packing AuthBlocksLib..."
-dotnet pack AuthBlocksLib/AuthBlocksLib.csproj -c Release -o ./nupkgs
-if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksLib.csproj (exit code $LASTEXITCODE)" }
-
-Write-Host "Packing AuthBlocksWeb.Client..."
-dotnet pack AuthBlocksWeb.Client/AuthBlocksWeb.Client.csproj -c Release -o ./nupkgs
-if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksWeb.Client.csproj (exit code $LASTEXITCODE)" }
-
-Write-Host "Packing AuthBlocksWeb..."
-dotnet pack AuthBlocksWeb/AuthBlocksWeb.csproj -c Release -o ./nupkgs
-if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for AuthBlocksWeb.csproj (exit code $LASTEXITCODE)" }
-
-# Push
-Write-Host "Pushing to nuget.org..."
-Get-ChildItem ./nupkgs/*.nupkg | ForEach-Object {
-    dotnet nuget push $_.FullName --api-key $ApiKey --source https://api.nuget.org/v3/index.json --skip-duplicate
-    if ($LASTEXITCODE -ne 0) { throw "dotnet nuget push failed for $($_.Name) (exit code $LASTEXITCODE)" }
+# --- Locate the shared pack script ---
+$SharedScript = Join-Path $ToolingRoot 'Pack-Library.ps1'
+if (-not (Test-Path $SharedScript)) {
+    throw "Shared pack script not found at '$SharedScript'. Expected the Cerebellum tooling repo at '$ToolingRoot' (override with -ToolingRoot)."
 }
 
-$csproj = [xml](Get-Content 'AuthBlocksLib/AuthBlocksLib.csproj')
-$Version = $csproj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -ExpandProperty Version
-Write-Host "Done. Cerebellum.AuthBlocks.Models, Cerebellum.AuthBlocks.Data, Cerebellum.AuthBlocks, Cerebellum.AuthBlocks.Web.Client, and Cerebellum.AuthBlocks.Web $Version published successfully."
+# --- Load this repo's configuration ---
+$ConfigPath = Join-Path $RepoRoot 'pack.config.ps1'
+if (-not (Test-Path $ConfigPath)) {
+    throw "pack.config.ps1 not found at '$ConfigPath'. Each repo must supply one."
+}
+$Config = & $ConfigPath
+foreach ($key in 'Projects', 'PushSymbols') {
+    if (-not $Config.ContainsKey($key)) { throw "pack.config.ps1 must define '$key'." }
+}
+
+# --- Read this repo's single version source ---
+$PropsPath = Join-Path $RepoRoot 'Directory.Build.props'
+if (-not (Test-Path $PropsPath)) {
+    throw "Directory.Build.props not found at '$PropsPath'. It is the single version source for this repo."
+}
+$props = [xml](Get-Content $PropsPath)
+$Version = $props.Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+if (-not $Version) { throw "No <Version> found in Directory.Build.props." }
+
+# --- Forward to the shared script ---
+$forward = @{
+    RepoRoot    = $RepoRoot
+    Projects    = $Config.Projects
+    Version     = $Version
+    PushSymbols = [bool]$Config.PushSymbols
+    PackOnly    = $PackOnly
+}
+if ($ApiKey) { $forward.ApiKey = $ApiKey }
+
+& $SharedScript @forward
