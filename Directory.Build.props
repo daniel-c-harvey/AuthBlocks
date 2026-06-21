@@ -1,0 +1,16 @@
+<Project>
+
+  <!--
+    Single version source for every package produced by this repository.
+    Each project inherits this <Version> automatically (MSBuild imports the
+    nearest Directory.Build.props up the tree). Do NOT add a per-project
+    <Version> to any csproj: a local <Version> would override this value and
+    reintroduce the cross-package version skew this file exists to prevent.
+
+    Bump this one value to release a new version of all repo packages in lockstep.
+  -->
+  <PropertyGroup>
+    <Version>10.3.38</Version>
+  </PropertyGroup>
+
+</Project>
