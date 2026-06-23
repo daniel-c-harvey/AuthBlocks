@@ -195,9 +195,14 @@ public abstract class AuthorizingModelClient<TModel, TConfig> : ModelClient<TMod
             () => http.GetAsync(BuildPagedQueryUri($"api/{config.ControllerName}", query)),
             DeserializeApiResult<PagedResult<TModel>>);
 
+    public override Task<ApiResult<ItemCount>> GetCount()
+        => SendWithAuth(
+            () => http.GetAsync($"api/{config.ControllerName}/count"),
+            DeserializeApiResult<ItemCount>);
+
     public override Task<ApiResult<ItemCount>> GetPageCount(PagedQuery query)
         => SendWithAuth(
-            () => http.GetAsync(BuildPagedQueryUri($"api/{config.ControllerName}/count", query)),
+            () => http.GetAsync(BuildPagedQueryUri($"api/{config.ControllerName}/pagecount", query)),
             DeserializeApiResult<ItemCount>);
 
     // Note: the send delegate is called twice on the 401-retry path.

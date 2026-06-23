@@ -8,7 +8,7 @@
 
     <PropertyGroup>
         <PackageId>Cerebellum.AuthBlocks.Web</PackageId>
-        <Version>10.3.34</Version>
+        <Version>10.3.37</Version>
         <Authors>Daniel Harvey</Authors>
         <Company>Cerebellum Softworks</Company>
         <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
@@ -49,8 +49,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.30" />
-      <PackageReference Include="Cerebellum.BlazorBlocks.Web" Version="10.3.31" />
+      <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.31" />
+      <PackageReference Include="Cerebellum.BlazorBlocks.Web" Version="10.3.33" />
       <ProjectReference Include="..\AuthBlocksWeb.Client\AuthBlocksWeb.Client.csproj" />
       <ProjectReference Include="..\AuthBlocksLib\AuthBlocksLib.csproj" />
     </ItemGroup>

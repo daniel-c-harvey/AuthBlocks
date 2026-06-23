@@ -1,50 +1,90 @@
-﻿using AuthBlocksModels.ApiModels;
-using AuthBlocksModels.InputModels;
+using AuthBlocksModels.ApiModels;
 using AuthBlocksWeb.ApiClients;
+using AuthBlocksWeb.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
-using MudBlazor;
 
 namespace AuthBlocksWeb.Components.Pages.UserAdmin.Users;
 
 public partial class NewUserForm : ComponentBase
 {
+    private bool _isLoading;
+    private List<RoleInfo> _availableRoles = new();
+
+    private string? Message { get; set; }
+
     [SupplyParameterFromForm]
-    public PendingRegistrationInputModel Input { get; set; } = new();
-    
+    public AdminRegisterRequest Input { get; set; } = new();
+
     [Inject]
-    public required PendingRegistrationClient Client { get; set; }
-    
+    public required IAuthApiClient AuthApiClient { get; set; }
+
+    [Inject]
+    public required IAuthSession AuthSession { get; set; }
+
     [Inject]
     public required NavigationManager Navigation { get; set; }
-    
-    [Inject]
-    public required IDialogService DialogService { get; set; }
 
-    // private async Task CreatePendingRegistration(EditContext arg)
-    // {
-    //     Task<RegistrationCreatedResult> resultTask = Task.Run(async () => await Client.CreatePendingRegistration(Input.Email, Navigation.ToAbsoluteUri("account/register").AbsoluteUri));
-    //
-    //     var parameters = new DialogParameters<UserSubmittedModal>
-    //     {
-    //         { x => x.ResultTask, resultTask },
-    //     };
-    //     var options = new DialogOptions { CloseButton = true, FullWidth = true };
-    //
-    //     // Post and show results
-    //     var dialog = await DialogService.ShowAsync<UserSubmittedModal>($"Submit Account Registration Result", parameters, options);
-    //     var dialogResult = await dialog.Result;
-    //
-    //     if(dialogResult != null && 
-    //        !dialogResult.Canceled && 
-    //        dialogResult.Data is NetBlocks.Models.Result result &&
-    //        result.Success)
-    //     {
-    //         // Navigation.NavigateTo($"/useradmin/users", forceLoad: true);
-    //     }
-    // }
-    private void X()
+    protected override async Task OnInitializedAsync()
     {
-        throw new NotImplementedException();
+        var token = await AuthSession.GetValidTokenAsync();
+        if (token is null)
+        {
+            Message = "Roles could not be loaded (session unavailable). You can still create the account without assigning roles.";
+            return;
+        }
+
+        var rolesResult = await AuthApiClient.GetRolesAsync(token);
+        if (rolesResult.Success && rolesResult.Value is not null)
+        {
+            _availableRoles = rolesResult.Value;
+        }
+        else
+        {
+            Message = "Roles could not be loaded. You can still create the account without assigning roles.";
+        }
+    }
+
+    private void OnRolesChanged(IEnumerable<long> values)
+    {
+        Input.RoleIds = values.ToList();
+    }
+
+    private async Task CreateUser()
+    {
+        _isLoading = true;
+        Message = null;
+        StateHasChanged();
+
+        try
+        {
+            var token = await AuthSession.GetValidTokenAsync();
+            if (token is null)
+            {
+                Message = "Your session has expired. Please log in again.";
+                return;
+            }
+
+            var result = await AuthApiClient.AdminRegisterAsync(Input, token);
+            if (result.Success)
+            {
+                Navigation.NavigateTo("/useradmin/users", forceLoad: true);
+            }
+            else
+            {
+                var serverMessage = string.Join("; ", result.Messages.Select(m => m.Message));
+                Message = string.IsNullOrWhiteSpace(serverMessage)
+                    ? "Registration failed. Please check your input and try again."
+                    : serverMessage;
+            }
+        }
+        catch (Exception)
+        {
+            Message = "An error occurred during registration. Please try again.";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
     }
 }

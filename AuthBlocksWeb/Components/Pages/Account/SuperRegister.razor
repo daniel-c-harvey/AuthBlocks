@@ -1,162 +1,19 @@
-@using AuthBlocksModels.ApiModels
 @using AuthBlocksModels.SystemDefinitions
-@using AuthBlocksWeb.ApiClients
 @using AuthBlocksWeb.HierarchicalAuthorize
-@using AuthBlocksWeb.Services
 
-@inject IAuthApiClient AuthApiClient
-@inject IAuthSession AuthSession
+@inject NavigationManager Navigation
 
 @attribute [HierarchicalRoleAuthorize(SystemRoleConstants.UserAdmin)]
 @page "/account/superregister"
 @rendermode InteractiveServer
 
-<PageTitle>Admin Register</PageTitle>
-
-<MudText Typo="Typo.h6">Create a new account.</MudText>
-
-<StatusMessage Message="@Message" />
-<EditForm Model="Input" OnValidSubmit="RegisterUser" FormName="admin-register">
-    <DataAnnotationsValidator />
-    <MudGrid Class="my-5" Spacing="3">
-        <MudItem xs="12" md="6">
-            <MudTextField Label="Username"
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Person"
-                          AdornmentColor="Color.Primary"
-                          Placeholder="Enter the username"
-                          Variant="Variant.Outlined"
-                          @bind-Value="Input.UserName"
-                          For="() => Input.UserName"/>
-        </MudItem>
-        <MudItem xs="12" md="6">
-            <MudTextField Label="Email"
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Email"
-                          AdornmentColor="Color.Primary"
-                          Placeholder="Enter the email"
-                          Variant="Variant.Outlined"
-                          @bind-Value="Input.Email"
-                          For="() => Input.Email"/>
-        </MudItem>
-        <MudItem xs="12" md="6">
-            <MudTextField Label="Password"
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Lock"
-                          AdornmentColor="Color.Primary"
-                          Placeholder="Enter a password"
-                          Variant="Variant.Outlined"
-                          InputType="InputType.Password"
-                          @bind-Value="Input.Password"
-                          For="() => Input.Password"/>
-        </MudItem>
-        <MudItem xs="12" md="6">
-            <MudTextField Label="Confirm Password"
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Lock"
-                          AdornmentColor="@((Input.Password.Equals(Input.ConfirmPassword)) ? Color.Success : Color.Error)"
-                          Placeholder="Confirm the password"
-                          Variant="Variant.Outlined"
-                          InputType="InputType.Password"
-                          @bind-Value="Input.ConfirmPassword"
-                          For="() => Input.ConfirmPassword"/>
-        </MudItem>
-        <MudItem xs="12">
-            <MudSelect T="long"
-                       Label="Roles"
-                       MultiSelection="true"
-                       SelectedValues="Input.RoleIds"
-                       SelectedValuesChanged="OnRolesChanged"
-                       Variant="Variant.Outlined"
-                       AnchorOrigin="Origin.BottomCenter"
-                       HelperText="Optional. Select one or more roles to assign.">
-                @foreach (var role in _availableRoles)
-                {
-                    <MudSelectItem T="long" Value="role.Id">@role.Name</MudSelectItem>
-                }
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="12" Class="d-flex justify-start py-5">
-            <MudStack Spacing="4">
-                <MudButton StartIcon="@((_isLoading) ? Icons.Material.Filled.Refresh : null)"
-                           Disabled="_isLoading"
-                           Color="Color.Primary"
-                           Variant="Variant.Filled"
-                           ButtonType="ButtonType.Submit">
-                    @(_isLoading ? "Creating account..." : "Register")
-                </MudButton>
-                <MudButton Href="/account/login"
-                           Color="Color.Secondary"
-                           Variant="Variant.Outlined">
-                    Log into an existing account
-                </MudButton>
-            </MudStack>
-        </MudItem>
-    </MudGrid>
-</EditForm>
+<PageTitle>Redirecting…</PageTitle>
 
 @code {
-    private string? Message;
-    private bool _isLoading;
-    private List<RoleInfo> _availableRoles = new();
-
-    [SupplyParameterFromForm]
-    private AdminRegisterRequest Input { get; set; } = new();
-
-    protected override async Task OnInitializedAsync()
+    // SuperRegister was absorbed by the canonical direct-provision page at
+    // /useradmin/users/new. This route is retained only to redirect old links.
+    protected override void OnInitialized()
     {
-        var token = await AuthSession.GetValidTokenAsync();
-        if (token is null)
-        {
-            return;
-        }
-
-        var rolesResult = await AuthApiClient.GetRolesAsync(token);
-        if (rolesResult.Success && rolesResult.Value is not null)
-        {
-            _availableRoles = rolesResult.Value;
-        }
-    }
-
-    private void OnRolesChanged(IEnumerable<long> values)
-    {
-        Input.RoleIds = values.ToList();
-    }
-
-    public async Task RegisterUser()
-    {
-        _isLoading = true;
-        Message = null;
-        StateHasChanged();
-
-        try
-        {
-            var token = await AuthSession.GetValidTokenAsync();
-            if (token is null)
-            {
-                Message = "Your session has expired. Please log in again.";
-                return;
-            }
-
-            var result = await AuthApiClient.AdminRegisterAsync(Input, token);
-            if (result.Success)
-            {
-                Message = $"Account '{Input.UserName}' created successfully.";
-                Input = new AdminRegisterRequest();
-            }
-            else
-            {
-                Message = "Registration failed. Please check your input and try again.";
-            }
-        }
-        catch (Exception)
-        {
-            Message = "An error occurred during registration. Please try again.";
-        }
-        finally
-        {
-            _isLoading = false;
-            StateHasChanged();
-        }
+        Navigation.NavigateTo("/useradmin/users/new", forceLoad: true, replace: true);
     }
 }
