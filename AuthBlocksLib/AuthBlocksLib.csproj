@@ -41,9 +41,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.31" />
-    <PackageReference Include="Cerebellum.BlazorBlocks.Models" Version="10.3.32" />
-    <PackageReference Include="Cerebellum.BlazorBlocks.Api" Version="10.3.32" />
+    <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.32" />
+    <PackageReference Include="Cerebellum.BlazorBlocks.Models" Version="10.3.35" />
+    <PackageReference Include="Cerebellum.BlazorBlocks.Api" Version="10.3.35" />
     <ProjectReference Include="..\AuthBlocksModels\AuthBlocksModels.csproj" />
     <ProjectReference Include="..\AuthBlocksData\AuthBlocksData.csproj" />
   </ItemGroup>

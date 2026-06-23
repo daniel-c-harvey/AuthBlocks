@@ -51,8 +51,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.31" />
-      <PackageReference Include="Cerebellum.BlazorBlocks.Data" Version="10.3.32" />
+      <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.32" />
+      <PackageReference Include="Cerebellum.BlazorBlocks.Data" Version="10.3.35" />
       <ProjectReference Include="..\AuthBlocksModels\AuthBlocksModels.csproj" />
     </ItemGroup>
 
