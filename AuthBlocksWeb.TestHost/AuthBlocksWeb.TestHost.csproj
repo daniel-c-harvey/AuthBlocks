@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <!-- Local debugging host only — never produce a NuGet package for this project,
+             regardless of the repo-wide Version in Directory.Build.props. -->
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MudBlazor" Version="8.9.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.7" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Exercise current AuthBlocks source, not packages. BlazorBlocks arrives
+             transitively via AuthBlocksWeb's package reference (10.3.34), mirroring
+             a real consumer's dependency graph. -->
+        <ProjectReference Include="..\AuthBlocksWeb\AuthBlocksWeb.csproj" />
+        <ProjectReference Include="..\AuthBlocksWeb.TestHost.Client\AuthBlocksWeb.TestHost.Client.csproj" />
+    </ItemGroup>
+
+</Project>
