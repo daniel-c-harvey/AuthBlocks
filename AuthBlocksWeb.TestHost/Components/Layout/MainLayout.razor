@@ -1,0 +1,25 @@
+@inherits LayoutComponentBase
+@using AuthBlocksWeb.Components.Layout
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudText Typo="Typo.h6">AuthBlocks Test Host</MudText>
+    </MudAppBar>
+    <MudDrawer Open="true" Elevation="1" Variant="@DrawerVariant.Persistent">
+        <MudNavMenu>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+            <UserAdminMenu />
+            <AccountNavMenu />
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>

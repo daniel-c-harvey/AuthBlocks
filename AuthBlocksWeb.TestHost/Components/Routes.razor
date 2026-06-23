@@ -1,0 +1,25 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using AuthBlocksWeb.Components
+@using AuthBlocksWeb.TestHost.Components.Layout
+
+<Router AppAssembly="typeof(Program).Assembly"
+        AdditionalAssemblies="new[] { typeof(AuthBlocksWeb._Imports).Assembly, typeof(AuthBlocksWeb.Client._Imports).Assembly }">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="typeof(MainLayout)">
+            <NotAuthorized Context="authContext">
+                @if (authContext.User.Identity?.IsAuthenticated != true)
+                {
+                    <RedirectToLogin />
+                }
+                else
+                {
+                    <MudText Typo="Typo.body1" Color="Color.Error">You are not authorized to access this resource.</MudText>
+                }
+            </NotAuthorized>
+            <Authorizing>
+                <MudProgressCircular Indeterminate="true" />
+            </Authorizing>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>
