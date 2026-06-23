@@ -49,8 +49,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.31" />
-      <PackageReference Include="Cerebellum.BlazorBlocks.Web" Version="10.3.34" />
+      <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.32" />
+      <PackageReference Include="Cerebellum.BlazorBlocks.Web" Version="10.3.35" />
       <ProjectReference Include="..\AuthBlocksWeb.Client\AuthBlocksWeb.Client.csproj" />
       <ProjectReference Include="..\AuthBlocksLib\AuthBlocksLib.csproj" />
     </ItemGroup>

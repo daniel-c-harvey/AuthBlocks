@@ -10,7 +10,7 @@
     Bump this one value to release a new version of all repo packages in lockstep.
   -->
   <PropertyGroup>
-    <Version>10.3.38</Version>
+    <Version>10.3.39</Version>
   </PropertyGroup>
 
 </Project>

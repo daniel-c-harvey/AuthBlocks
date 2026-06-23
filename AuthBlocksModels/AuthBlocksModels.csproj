@@ -40,8 +40,8 @@
     <ProjectReference Include="..\GenBlocks\GenBlocks.csproj" OutputItemType="Analyzer">
       <PrivateAssets>all</PrivateAssets>
     </ProjectReference>
-    <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.31" />
-    <PackageReference Include="Cerebellum.BlazorBlocks.Models" Version="10.3.32" />
+    <PackageReference Include="Cerebellum.NetBlocks" Version="10.3.32" />
+    <PackageReference Include="Cerebellum.BlazorBlocks.Models" Version="10.3.35" />
   </ItemGroup>
 
 </Project>
